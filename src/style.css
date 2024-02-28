@@ -1,0 +1,16 @@
+body {
+    display: block;
+    margin: 0%;
+    line-height: 1.15;
+    background-color: black;
+    text-align: center;
+}
+
+h1 {
+    color: white;
+    font-family: 'Arial';
+}
+
+.canvas {
+    background-color: green;
+}
