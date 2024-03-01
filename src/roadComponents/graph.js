@@ -6,17 +6,6 @@ import Segment from "./primitives/segment";
 
 function Graph({points, segments, update}) {
 
-    // const [points, setPoints] = useState(pointArray);
-    // const [segments, setSegments] = useState(segmentArray);
-    // const [unusedPoints, setUnusedPoints] = useState([]);
-    // const [unusedPoints, setUnusedPoints] = useState([]);
-
-
-    // useEffect(() => {
-      
-    //     setUnusedPoints(points.filter(point => !segments.flatMap(segment => [segment.p1, segment.p2]).includes(point)));
-    // }, [points, segments]);
-
     const handleDrag = ({oldPosition, newPosition}) => {
         update( 
             points.map(item => {

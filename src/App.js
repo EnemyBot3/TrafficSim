@@ -1,5 +1,6 @@
 import React from 'react'
 import RoadCanvas from './roadCanvas';
+import RightContols from './uiComponents/rightContols';
 
 function App() {
   return (

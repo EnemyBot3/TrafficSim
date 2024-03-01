@@ -1,27 +1,46 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Stage, Layer, Rect, Text, Arc } from 'react-konva';
+import React, { useState, useRef, useEffect } from 'react';
+import { Stage, Layer, Rect, Text, Line } from 'react-konva';
+import { samePoint, sameArray, clamp } from './utils/math';
 import Konva from 'konva';
 import Graph from './roadComponents/graph';
+import RightContols from './uiComponents/rightContols';
+
+export const RoadContext = React.createContext();
 
 const RoadCanvas = () => {
-  var selectedPoint = useRef(null);;
+  const scaleBy = 0.05;
+  const [stageScale, setStageScale] = useState({x: 1, y: 1}) 
+  const [stagePosition, setStagePosition] = useState({x: 0, y: 0})
+  const selectedPoint = useRef(null);
 
-  const [drag, setDrag] = useState(false);
-  const [points, setPoints] =  useState([
-    {x: 100, y: 100, selected: false},
-    {x: 200, y: 200, selected: false},
-    {x: 300, y: 100, selected: false},
-    {x: 300, y: 200, selected: false},
-    {x: 100, y: 200, selected: false},
-    {x: 400, y: 400, selected: false},
-  ]);
+  const [points, setPoints] =  useState([]);
+  const [segments, setSegments] = useState([]);
 
-  const [segments, setSegments] = useState([
-    [points[0]],
-    [points[1], points[2], points[3]],
-    [points[0], points[3]],
-    [points[0], points[2]],
-  ]);
+  // {x: 100, y: 100, selected: false},
+  // {x: 200, y: 200, selected: false},
+  // {x: 300, y: 100, selected: false},
+  // {x: 300, y: 200, selected: false},
+  // {x: 100, y: 200, selected: false},
+  // {x: 400, y: 400, selected: false},
+  
+  // [points[0]],
+  // [points[1], points[2], points[3]],
+  // [points[0], points[3]],
+  // [points[0], points[2]],
+
+
+  useEffect(() => {
+    const savedPoints = localStorage.getItem("points");
+    const savedSegments = localStorage.getItem("segments");
+
+    if (savedPoints && savedSegments) {
+      setPoints(JSON.parse(savedPoints));
+      setSegments(JSON.parse(savedSegments));
+    }
+
+  }, []);
+
+  const [previewLine, setPreviewLine] = useState([]);
 
   const updateGraph = ( points, segments ) => {
     setPoints(points);
@@ -29,57 +48,50 @@ const RoadCanvas = () => {
   }
 
   const handleClick = (event) => {
-        console.log(event)
 
-    if (event.evt.button === 0){ // left cliick
-      const { x, y } = event.target.attrs;
-      
-      if (selectedPoint.current === null) {
-        if (event.target instanceof Konva.Arc) {
+    if (event.evt.button === 0){ handleLeftClick(event.target.getRelativePointerPosition()) } 
+    else if (event.evt.button === 2) { handleRightClick(event.target.attrs) }
 
-          selectedPoint.current = {x, y};
-          setPoints(points.map(item => ({ ...item, selected: item.x === x && item.y === y })));
-        } 
-        else if (!(event.target instanceof Konva.Arc)) {
+    function handleLeftClick({ x, y })  {
+      const pointSelected = !(selectedPoint.current === null);
 
-          selectedPoint.current = {x: event.evt.layerX, y: event.evt.layerY};
-          const newPoints =  points.map(item => ({ ...item, selected: false }));
-          setPoints([...newPoints, {x: event.evt.layerX, y: event.evt.layerY, selected: true}]);         
+      if (!(event.target instanceof Konva.Arc)){
+        const newPoints =  points.map(item => ({ ...item, selected: false }));
+        setPoints([...newPoints, { x, y, selected: true}]);
+        if (pointSelected) { setSegments([...segments, [selectedPoint.current, { x , y }]]) }
+        selectedPoint.current = { x , y };
+      }
+      else if (event.target instanceof Konva.Arc) {
+        const { x, y } = event.target.attrs;
+        if (pointSelected) {
+          if ( samePoint(selectedPoint.current, {x, y}) ) { return; }
+          const newSegment = [selectedPoint.current, { x, y }]
+          if (!segments.some(segment => segment.every(point => newSegment.some(newPoint => samePoint(newPoint, point) )))) {
+            setSegments([...segments, newSegment])
+          }
         }
-      } else {
-        if (event.target instanceof Konva.Arc) {
-
-          setPoints(points.map(item => ({ ...item, selected: item.x === x && item.y === y })));
-          setSegments([...segments, [selectedPoint.current, {x, y}]])
-          selectedPoint.current = {x, y};
-        } 
-        else if (!(event.target instanceof Konva.Arc)) {
-         
-
-          const newPoints =  points.map(item => ({ ...item, selected: false }));
-          setPoints([...newPoints, {x: event.evt.layerX, y: event.evt.layerY, selected: true}]);     
-          setSegments([...segments, [selectedPoint.current, {x: event.evt.layerX, y: event.evt.layerY}]])
-          selectedPoint.current = {x: event.evt.layerX, y: event.evt.layerY};
-
-        }
+        setPoints(points.map(item => ({ ...item, selected: samePoint(item, {x, y}) })));
+        selectedPoint.current = { x, y };
       }
 
-    } else if (event.evt.button === 2) { // right click 
-        selectedPoint.current = null;
+    }
+
+    function handleRightClick({ x, y }) {
+      setPreviewLine([]);
 
       if (event.target instanceof Konva.Arc) {
-        const { x, y } = event.target.attrs;
-
-        setSegments(segments.map(segment => segment.filter(point => !(point.x === x && point.y === y))));
-        setPoints(points.filter(item => !(x === item.x && y === item.y)));
+        if (selectedPoint.current !== null){ selectedPoint.current = null; return;}
+        const newSegments = segments.map(segment => segment.filter(point => !( samePoint(point, {x, y}))));
+        setSegments(newSegments.filter(segment => segment.length > 1));
+        setPoints(points.filter(item => !(samePoint(item, {x, y}))));
       }
-      else if (event.target instanceof Konva.Line) {
-
+      else if (event.target instanceof Konva.Line) {      
         const { points } = event.target.attrs;
-        setSegments(segments.filter(segment => !(segment.flatMap(item => [item.x, item.y]).toString() === points.toString())));
-      } else {
-
-        setPoints(points.map(item => ({ ...item, selected: false })));
+        setSegments(segments.filter(segment => !sameArray(segment.flatMap(item => [item.x, item.y]), points) ));
+      } 
+      else { 
+        selectedPoint.current = null;
+        setPoints(points.map(item => ({ ...item, selected: false }))); 
       }
     }
 
@@ -91,39 +103,94 @@ const RoadCanvas = () => {
     }
   }
 
+  const handleMouseMove = (event) => {
+    if (selectedPoint.current){
+      var {x, y} = event.currentTarget.getRelativePointerPosition()
+      setPreviewLine([selectedPoint.current.x, selectedPoint.current.y, x, y])
+    } else {
+      setPreviewLine([]);
+    }
+  }
 
+  const dragBounds = (position) => {
+    return {
+      x: clamp(-1000, position.x, 1000), 
+      y: clamp(-1000, position.y, 1000)}
+  }
 
+  const handleMouseWheel = (event) => {
+    event.evt.preventDefault();
+    
+    const direction = event.evt.deltaY > 0 ? -1 : 1;
+    const {x, y} = event.currentTarget.getPointerPosition()
+
+    const mousePointTo = {
+      x: (x - event.currentTarget.attrs.x) / event.currentTarget.attrs.scaleX,
+      y: (y - event.currentTarget.attrs.y) / event.currentTarget.attrs.scaleY,
+    }
+
+    const newScale = { 
+      x: clamp(0.15, event.currentTarget.attrs.scaleX + (scaleBy * direction), 1.7), 
+      y: clamp(0.15, event.currentTarget.attrs.scaleY + (scaleBy * direction), 1.7) 
+    }
+
+    var newPosition = { 
+      x: x - mousePointTo.x * newScale.x, 
+      y: y - mousePointTo.y * newScale.y
+    }
+
+    setStageScale(newScale);
+    setStagePosition(newPosition);
+  }
+ 
   return (
-    <Stage 
-      onClick={handleClick}
-      onMouseDown={handleMouseDown}
-      onContextMenu={(e) => e.evt.preventDefault()}
-      width={window.innerWidth} 
-      height={window.innerHeight}
-      draggable
-      className='canvas'>
+    <RoadContext.Provider value={{points, setPoints, segments, setSegments}}>
+      <Stage
+        onClick={handleClick}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onWheel={handleMouseWheel}
+        onContextMenu={(e) => e.evt.preventDefault()}
+        dragBoundFunc={dragBounds}
+        width={window.innerWidth} 
+        height={window.innerHeight}
+        scale={stageScale}
+        position={stagePosition}
+        className='canvas'>
 
-        <Layer>
-          <Text text="Try click on rect" />
+          <Layer>
+            <Text text="Try click on rect" />
 
-            <Rect 
-              x={20}
-              y={20}
-              width={50}
-              height={50}
-              fill={"red"}
-              shadowBlur={5}
-            />
+              <Rect 
+                x={20}
+                y={20}
+                width={50}
+                height={50}
+                fill={"red"}
+                shadowBlur={5}
+                onClick={() => {console.log(points); console.log(segments);}}
+              />
 
-            <Graph 
-              points={points}
-              segments={segments}
-              update={updateGraph}
-            />
+              <Line
+                strokeWidth={2}
+                stroke={"black"}
+                points={previewLine}
+                dash={[3, 3]}
+                listening={false}
+              />
 
-        </Layer>
-    </Stage>
+              <Graph 
+                points={points}
+                segments={segments}
+                update={updateGraph}
+              />
 
+          </Layer>
+      </Stage>
+
+      <RightContols />
+
+    </RoadContext.Provider>
   );
 };
 
