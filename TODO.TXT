@@ -1,0 +1,6 @@
+bug
+1. multiple points can be dragged at once
+2. once points over lap no way to to unstick them (overlap protecttion on drag?)
+
+missing
+1. cant connect road by dragging a poiint over another

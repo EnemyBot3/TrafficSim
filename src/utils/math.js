@@ -70,3 +70,65 @@ export function sameArray(arr1, arr2, reversable = false){
 export function clamp(min, value, max) {
     return Math.min(Math.max(value, min), max);
 };
+
+/**
+ * Returns the point translated by the given offset towards the given angle.
+ *
+ * Example: point {x: 1, y: 1} translated 90 deg with ofset 10
+ * retturns point {x: 10, y: 1}
+ *
+ * @param {position} the starting point
+ * @param {angle} diirection to translate tto
+ * @param {offset} amount to translate by
+ * @returns the new position
+ * @type object
+ */
+export function translate(position, angle, offset){
+    return {
+        x: position.x + Math.cos(angle) * offset,
+        y: position.y + Math.sin(angle) * offset
+    }
+}
+
+/**
+ * Returns the gradiient giiven two points 
+ *
+ * Example: given p1 = {x: 0, y: 0} and p2 = {x: 10, y: 10} return 10
+ *
+ * @param {p1} the first point
+ * @param {p2} the second point
+ * @returns the gradient
+ * @type int
+ */
+export function gradient(p1, p2){
+    return Math.atan2(p1.y - p2.y, p1.x - p2.x)
+}
+
+export function getIntersection(A, B, C, D) {
+    const tTop = (D.x - C.x) * (A.y - C.y) - (D.y - C.y) * (A.x - C.x);
+    const uTop = (C.y - A.y) * (A.x - B.x) - (C.x - A.x) * (A.y - B.y);
+    const bottom = (D.y - C.y) * (B.x - A.x) - (D.x - C.x) * (B.y - A.y);
+ 
+    if (bottom != 0) {
+       const t = tTop / bottom;
+       const u = uTop / bottom;
+       if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+          return {
+             x: lerp(A.x, B.x, t),
+             y: lerp(A.y, B.y, t),
+             offset: t,
+          };
+       }
+    }
+ 
+    return null;
+}
+ 
+export function lerp(a, b, t) {
+    return a + (b - a) * t;
+}
+ 
+export function getRandomColor() {
+    const hue = 290 + Math.random() * 260;
+    return "hsl(" + hue + ", 100%, 60%)";
+}
