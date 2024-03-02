@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Rect, Text, Line } from 'react-konva';
-import { samePoint, sameArray, clamp } from './utils/math';
+import { samePoint, sameArray, clamp, distance } from './utils/math';
 import Konva from 'konva';
 import Graph from './roadComponents/graph';
 import RightContols from './uiComponents/rightContols';
@@ -107,7 +107,8 @@ const RoadCanvas = () => {
     if (selectedPoint.current){
       var {x, y} = event.currentTarget.getRelativePointerPosition()
       setPreviewLine([selectedPoint.current.x, selectedPoint.current.y, x, y])
-    } else {
+    } else if (previewLine.length !== 0) {
+      console.log(previewLine)
       setPreviewLine([]);
     }
   }
@@ -162,10 +163,10 @@ const RoadCanvas = () => {
             <Text text="Try click on rect" />
 
               <Rect 
-                x={20}
-                y={20}
-                width={50}
-                height={50}
+                x={0}
+                y={0}
+                width={100}
+                height={100}
                 fill={"red"}
                 shadowBlur={5}
                 onClick={() => {console.log(points); console.log(segments);}}
