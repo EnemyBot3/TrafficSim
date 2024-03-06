@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { Arc } from 'react-konva';
 
 function Point({x, y, selected = false, onDrag}) {
-    const size = 18;
-    const [color, setColor] = useState("black");
-    useEffect(() => { setColor(selected? "yellow": "black") }, [selected]);
+    const size = 10;
+    const [color, setColor] = useState("transparent");
+    useEffect(() => { setColor(selected? "yellow": "transparent") }, [selected]);
 
     const handleDragMove = (event) => {
         onDrag({
@@ -17,14 +17,14 @@ function Point({x, y, selected = false, onDrag}) {
         <Arc 
           x={x}
           y={y}
-          outerRadius={size / 2}
+          outerRadius={size}
           angle={360}
           fill={color}
           draggable
           onDragMove={handleDragMove}
           onDragEnd={handleDragMove}
-          onMouseEnter={() => setColor("yellow")}
-          onMouseLeave={() => !selected && setColor("black")}/>
+          onMouseEnter={() => setColor("black")}
+          onMouseLeave={() => !selected && setColor("transparent")}/>
     );
 }
 

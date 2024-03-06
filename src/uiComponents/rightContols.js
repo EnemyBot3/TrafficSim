@@ -14,10 +14,17 @@ export default function RightContols() {
     localStorage.setItem("segments", JSON.stringify(segments));
   }}}
 
+  const graphToggle = () => {
+
+  }
+
   return (
     <div className='rightControls'>
       <button onClick={clear}>🗑️</button>
       <button onClick={save}>💾</button>
+      &nbsp;
+      <button onClick={graphToggle}>🌐</button>
+      <button onClick={pause}>⏯️</button>
     </div>
   );
 }

@@ -172,18 +172,18 @@ const RoadCanvas = () => {
                 onClick={() => {console.log(points); console.log(segments);}}
               />
 
+              <Graph 
+                points={points}
+                segments={segments}
+                update={updateGraph}
+              />
+              
               <Line
                 strokeWidth={2}
                 stroke={"black"}
                 points={previewLine}
                 dash={[3, 3]}
                 listening={false}
-              />
-
-              <Graph 
-                points={points}
-                segments={segments}
-                update={updateGraph}
               />
 
           </Layer>
