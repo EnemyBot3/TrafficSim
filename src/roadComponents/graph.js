@@ -1,10 +1,11 @@
 import Point from "./primitives/point";
 import Segment from "./primitives/segment";
 import Polgon from "./primitives/polygon";
+import { sameArray } from '../utils/math';
 
 function Graph({points, segments, update}) {
 
-    const handleDrag = ({oldPosition, newPosition}) => {
+    const handlePointDrag = ({oldPosition, newPosition}) => {
         update( 
             points.map(item => {
                 if (item.x === oldPosition.x && item.y === oldPosition.y) {
@@ -21,12 +22,12 @@ function Graph({points, segments, update}) {
                 })
             )
         );
-    } 
+    }
+  
 
     return ( 
         <>
-        <Polgon
-            segments={segments} />
+        <Polgon segments={segments} />
 
         {
             segments.map((item, index) => 
@@ -42,7 +43,7 @@ function Graph({points, segments, update}) {
                   x={item.x} 
                   y={item.y} 
                   selected={item.selected}
-                  onDrag={handleDrag}/>
+                  onDrag={handlePointDrag}/>
             )
         }
         </>

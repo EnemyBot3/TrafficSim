@@ -1,10 +1,13 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useContext } from "react";
 import { Line } from 'react-konva';
-import { translate, gradient } from "../../utils/math";
+import { translate, gradient} from "../../utils/math";
+import { RoadContext } from "../../roadCanvas";
+import { Modes } from "../../utils/enums";
 
 function Segment({ nodes }) {
+    const { mode } = useContext(RoadContext);
     const points = nodes.flatMap(item => [item.x, item.y]);
-    const lineWidth = 3;
+    const lineWidth = 10;
     const [color, setColor] = useState("transparent");
 
     return ( 
@@ -14,7 +17,7 @@ function Segment({ nodes }) {
             points={points}
             onMouseEnter={() => setColor("rgba(0, 0, 0, .5)")}
             onMouseLeave={() => setColor("transparent")}
-            bazier={true}
+            listening={mode == Modes.Graphs}
         />
     );
 }

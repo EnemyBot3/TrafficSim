@@ -19,7 +19,7 @@ export function distance(p1, p2) {
 
 export function average(p1, p2) {
     return {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
- }
+}
 
 /**
  * Returns true if the two points are the same.
@@ -135,4 +135,67 @@ export function lerp(a, b, t) {
 export function getRandomColor() {
     const hue = 290 + Math.random() * 260;
     return "hsl(" + hue + ", 100%, 60%)";
+}
+
+export function projectPoint(point, segment) {
+    const a = subtract(point, segment[0]);
+    const b = subtract(segment[1], segment[0]);
+
+    const normB = normalize(b);
+    const offset = dot(a, normB) / magnitude(b);
+    const projection = add(segment[0], scale(normB, dot(a, normB))); 
+
+    return {projection, offset}
+}
+
+export function subtract(p1, p2) {
+    return {x: p1.x - p2.x, y: p1.y - p2.y}
+}
+
+export function normalize(p) {
+    return scale(p, 1 / magnitude(p));
+}
+ 
+export function scale(p, scaler) {
+    return {x: p.x * scaler, y: p.y * scaler}
+}
+
+function magnitude(p) {
+    return Math.hypot(p.x, p.y);
+}
+
+export function add(p1, p2) {
+    return {x: p1.x + p2.x, y: p1.y + p2.y}
+}
+
+export function dot(p1, p2) {
+    return p1.x * p2.x + p1.y * p2.y;
+}
+
+export function segmentDirectionVector(segment) {
+    return normalize(subtract(segment[0], segment[1]));
+}
+
+export function angle(p) {
+    return Math.atan2(p.y, p.x);
+}
+
+export function round(p, amount) {
+    return { x: Math.round(p.x, amount), y: Math.round(p.y, amount)}
+}
+
+export function radsToDegs(radians)
+{
+  return radians * (180/Math.PI);
+}
+
+export function perpendicular(p) {
+    return { x: -p.y, y: p.x };
+}
+
+export function crossProduct(p, segment) {
+    const A = subtract(p, segment[1]);
+    const B = subtract(p, segment[0]);
+    const cross = A.x * B.y - A.y * B.x;
+    return cross;
 }

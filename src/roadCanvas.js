@@ -1,20 +1,32 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Stage, Layer, Rect, Text, Line } from 'react-konva';
-import { samePoint, sameArray, clamp, distance } from './utils/math';
+import { Stage, Layer, Rect, Text, Line, Shape, Arc } from 'react-konva';
+import { samePoint, sameArray, clamp, projectPoint } from './utils/math';
 import Konva from 'konva';
 import Graph from './roadComponents/graph';
+import MarkingsEditor from './roadComponents/markings';
+import { Sign } from './roadComponents/roadSigns/sign';
 import RightContols from './uiComponents/rightContols';
+import BottomControls from './uiComponents/bottomControls';
+import { Modes } from './utils/enums';
 
 export const RoadContext = React.createContext();
 
 const RoadCanvas = () => {
-  const scaleBy = 0.05;
-  const [stageScale, setStageScale] = useState({x: 1, y: 1}) 
-  const [stagePosition, setStagePosition] = useState({x: 0, y: 0})
-  const selectedPoint = useRef(null);
+  const stage = useRef(null);
 
+  const scaleBy = 0.05;
+  const [stageScale, setStageScale] = useState({x: 1, y: 1});
+  const [stagePosition, setStagePosition] = useState({x: 0, y: 0});
+
+  const [mode, setMode] = useState(Modes.Graphs);
+
+  const selectedPoint = useRef(null);
   const [points, setPoints] =  useState([]);
   const [segments, setSegments] = useState([]);
+
+  const [polygons, setPolygons] = useState([]);
+  const [selectedPoly, setSelectedPoly] = useState(null);
+  const [signs, setSigns] = useState([]);
 
   // {x: 100, y: 100, selected: false},
   // {x: 200, y: 200, selected: false},
@@ -32,13 +44,30 @@ const RoadCanvas = () => {
   useEffect(() => {
     const savedPoints = localStorage.getItem("points");
     const savedSegments = localStorage.getItem("segments");
+    const savedSigns = localStorage.getItem("signs");
 
-    if (savedPoints && savedSegments) {
+    if (savedPoints && savedSegments && savedSigns) {
       setPoints(JSON.parse(savedPoints));
       setSegments(JSON.parse(savedSegments));
+      setSigns(JSON.parse(savedSigns));
     }
-
   }, []);
+
+  useEffect(() => {
+    if (mode == Modes.Markings) {
+      selectedPoint.current = null;
+      setPreviewLine([]);
+    }
+  }, [mode])
+
+  useEffect(() => {
+    console.log(polygons)
+  }, [polygons])
+
+  useEffect(() => {
+    console.log(selectedPoly)
+
+  }, [selectedPoly])
 
   const [previewLine, setPreviewLine] = useState([]);
 
@@ -55,10 +84,16 @@ const RoadCanvas = () => {
     function handleLeftClick({ x, y })  {
       const pointSelected = !(selectedPoint.current === null);
 
-      if (!(event.target instanceof Konva.Arc)){
+      if (event.target instanceof Konva.Line){
         const newPoints =  points.map(item => ({ ...item, selected: false }));
         setPoints([...newPoints, { x, y, selected: true}]);
-        if (pointSelected) { setSegments([...segments, [selectedPoint.current, { x , y }]]) }
+        
+        const segPoints = event.target.attrs.points;
+        var newSegments = segments.filter(segment => !sameArray([segment[0].x, segment[0].y, segment[1].x, segment[1].y], segPoints) );
+        newSegments = [...newSegments, [{ x: segPoints[0] , y: segPoints[1] }, { x, y }],  [{ x: segPoints[2] , y: segPoints[3] }, { x, y }] ];
+
+        if (pointSelected) { setSegments([...newSegments, [selectedPoint.current, { x , y }]]); }
+        else { setSegments(newSegments); }
         selectedPoint.current = { x , y };
       }
       else if (event.target instanceof Konva.Arc) {
@@ -73,7 +108,12 @@ const RoadCanvas = () => {
         setPoints(points.map(item => ({ ...item, selected: samePoint(item, {x, y}) })));
         selectedPoint.current = { x, y };
       }
-
+      else {
+        const newPoints =  points.map(item => ({ ...item, selected: false }));
+        setPoints([...newPoints, { x, y, selected: true}]);
+        if (pointSelected) { setSegments([...segments, [selectedPoint.current, { x , y }]]) }
+        selectedPoint.current = { x , y };
+      }
     }
 
     function handleRightClick({ x, y }) {
@@ -99,24 +139,26 @@ const RoadCanvas = () => {
 
   const handleMouseDown = (event) => {
     if (event.evt.button === 1) {
-      event.target.startDrag();
+      event.currentTarget.startDrag();
     }
   }
 
   const handleMouseMove = (event) => {
-    if (selectedPoint.current){
-      var {x, y} = event.currentTarget.getRelativePointerPosition()
-      setPreviewLine([selectedPoint.current.x, selectedPoint.current.y, x, y])
-    } else if (previewLine.length !== 0) {
-      console.log(previewLine)
-      setPreviewLine([]);
+    var {x, y} = event.currentTarget.getRelativePointerPosition()
+
+    if (mode == Modes.Graphs) {
+      if (selectedPoint.current){ setPreviewLine([selectedPoint.current.x, selectedPoint.current.y, x, y]) } 
+      else if (previewLine.length !== 0) { setPreviewLine([]); }
+    } else if (mode == Modes.Markings) {
+      // const hoveredSegment = getNearestSegment({x, y}, segments, 10 * stageScale.x);
+      // console.log(hoveredSegment)
     }
   }
 
   const dragBounds = (position) => {
     return {
-      x: clamp(-1000, position.x, 1000), 
-      y: clamp(-1000, position.y, 1000)}
+      x: clamp(-2000, position.x, 2000), 
+      y: clamp(-2000, position.y, 2000)}
   }
 
   const handleMouseWheel = (event) => {
@@ -143,11 +185,12 @@ const RoadCanvas = () => {
     setStageScale(newScale);
     setStagePosition(newPosition);
   }
- 
+
   return (
-    <RoadContext.Provider value={{points, setPoints, segments, setSegments}}>
+    <RoadContext.Provider value={{points, setPoints, segments, setSegments, mode, setMode, polygons, setPolygons, selectedPoly, setSelectedPoly, signs, setSigns}}>
       <Stage
-        onClick={handleClick}
+        ref={stage}
+        onClick={mode == Modes.Graphs ? handleClick: null}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onWheel={handleMouseWheel}
@@ -169,7 +212,7 @@ const RoadCanvas = () => {
                 height={100}
                 fill={"red"}
                 shadowBlur={5}
-                onClick={() => {console.log(points); console.log(segments);}}
+                onClick={() => {console.log("points", points); console.log("segments", segments); console.log("signs", signs);}}
               />
 
               <Graph 
@@ -186,10 +229,26 @@ const RoadCanvas = () => {
                 listening={false}
               />
 
+           { selectedPoly !== null &&
+              <MarkingsEditor 
+                polygon={polygons[selectedPoly]} 
+                segment={segments[selectedPoly]} />
+            }
+
+            {signs.map((sign, index) => 
+              <Sign 
+                key={index}
+                type={sign.type} 
+                center={sign.center} 
+                direction={sign.direction} 
+                flipped={sign.flipped}
+            />)}
+
           </Layer>
       </Stage>
 
       <RightContols />
+      <BottomControls />
 
     </RoadContext.Provider>
   );

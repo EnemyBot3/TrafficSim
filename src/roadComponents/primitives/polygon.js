@@ -1,18 +1,20 @@
 import { Line, Arc, Shape } from 'react-konva';
 import { gradient, translate, getIntersection, getRandomColor, average } from "../../utils/math";
 import { memo } from 'react';
-
+import { RoadContext } from "../../roadCanvas";
+import { Modes, roadWidth } from "../../utils/enums";
+import { useContext, useMemo } from 'react';
 
 const Polygon = memo(function Polygon({ segments }) {
+    const { mode, selectedPoly, setPolygons, setSelectedPoly } = useContext(RoadContext);
+
     var kept = [];
-    const roadWidth = 80;
     const radius = roadWidth / 2;
-    const roundness = 3;
+    const roundness = 10;
     const color = "grey"
 
-
     // generates the road shape around each segment
-    const polygons = segments.map(segment => {
+    const polygons = useMemo(() => segments.map(segment => {
         console.log(segments.length);
 
         const [ start, end ] = segment;
@@ -30,17 +32,23 @@ const Polygon = memo(function Polygon({ segments }) {
             p1: vertex,
             p2: vertices[(i + 1) % vertices.length]
         }));
-    })
-
-    for (let i = 0; i < polygons.length - 1; i++){
-        for (let j = i + 1; j < polygons.length; j++){
+    }), [segments]);
+    
+    useMemo(() => {
+        for (let i = 0; i < polygons.length - 1; i++){
+            for (let j = i + 1; j < polygons.length; j++){
             updatePolygons(polygons[i], polygons[j])
+            }
         }
-    }
-    kept = joinPolygons()
+    }, [segments]);
+
+    kept = useMemo( () => joinPolygons(), [segments])
+
+    useMemo(() => {
+        setPolygons(polygons);
+    }, [segments])
 
     function updatePolygons(poly1, poly2) {
-
         for (let i = 0; i < poly1.length; i++){
             for (let j = 0; j < poly2.length; j++){
                 const inters = getIntersection(
@@ -105,7 +113,9 @@ const Polygon = memo(function Polygon({ segments }) {
                 <Shape 
                     key={index}
                     fill={color}
-                    listening={false}
+                    listening={mode == Modes.Markings && selectedPoly != index}
+                    onMouseEnter={() => {setSelectedPoly(index)}}
+                    onMouseLeave={() => setSelectedPoly(null)}
                     stroke={color}
                     strokeWidth={20}
                     sceneFunc={(ctx, shape) => {
