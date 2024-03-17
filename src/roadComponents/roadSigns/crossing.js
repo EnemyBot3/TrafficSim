@@ -17,8 +17,8 @@ export const Crossing = ({center, direction, flipped, projection}) => {
   ]
 
   const hitbox = [
-    ...Object.values(translate(center, angle(direction), crossingHeight )),
-    ...Object.values(translate(center, angle(direction), -crossingHeight ))
+    ...Object.values(translate(center, angle(direction), crossingHeight * .6)),
+    ...Object.values(translate(center, angle(direction), -crossingHeight * .6))
   ]
 
   const handleClick = (event) => {
@@ -34,6 +34,7 @@ export const Crossing = ({center, direction, flipped, projection}) => {
             stroke={"white"}
             dash={[11, 11]}
             points={points}
+            opacity={ projection ? 0.3 : 1}
             listening={false} />
         
         <Line 

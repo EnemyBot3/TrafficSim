@@ -26,7 +26,7 @@ export const Car = ({center, direction, flipped, projection}) => {
 
   return (
     <>
-       {car  &&  
+      {car  &&  
         <Shape 
           listening={false}
           opacity={projection ? 0.3 : 1}

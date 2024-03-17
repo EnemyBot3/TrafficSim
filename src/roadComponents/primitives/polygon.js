@@ -6,7 +6,7 @@ import { Modes, roadWidth } from "../../utils/enums";
 import { useContext, useMemo } from 'react';
 
 const Polygon = memo(function Polygon({ segments }) {
-    const { mode, selectedPoly, setPolygons, setSelectedPoly } = useContext(RoadContext);
+    const { mode, selectedPoly, setPolygons, setSelectedPoly, setRoadBorders } = useContext(RoadContext);
 
     var kept = [];
     const radius = roadWidth / 2;
@@ -15,7 +15,6 @@ const Polygon = memo(function Polygon({ segments }) {
 
     // generates the road shape around each segment
     const polygons = useMemo(() => segments.map(segment => {
-        console.log(segments.length);
 
         const [ start, end ] = segment;
         const vertices = []
@@ -46,6 +45,7 @@ const Polygon = memo(function Polygon({ segments }) {
 
     useMemo(() => {
         setPolygons(polygons);
+        setRoadBorders(kept);
     }, [segments])
 
     function updatePolygons(poly1, poly2) {

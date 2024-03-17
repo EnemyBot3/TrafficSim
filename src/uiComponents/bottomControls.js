@@ -18,7 +18,7 @@ export default function BottomControls() {
         setSelected(Modes.Markings)
     }
     
-    const graphToggle = () => {
+    const cars = () => {
 
     }
     
@@ -31,7 +31,7 @@ export default function BottomControls() {
 
       <HUDBottons onClick={graphs} icon={'🌐'} title={"Graph"} selected={selected == Modes.Graphs}/>
       <HUDBottons onClick={markings} icon={'🪧'} title={"Markings"} selected={selected == Modes.Markings}/>
-      <HUDBottons onClick={pause} icon={'🌐'} title={"sdddd"}/>
+      <HUDBottons onClick={pause} icon={'🚗'} title={"sdddd"}/>
       <HUDBottons onClick={pause} icon={'⏯️'} title={"wseeraph"}/>
       <HUDBottons onClick={pause} icon={'🗑️'} title={"Graph"}/>
     </div>

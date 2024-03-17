@@ -9,6 +9,8 @@ import RightContols from './uiComponents/rightContols';
 import BottomControls from './uiComponents/bottomControls';
 import { Modes } from './utils/enums';
 
+import Car from './carComponents/car';
+
 export const RoadContext = React.createContext();
 
 const RoadCanvas = () => {
@@ -25,6 +27,7 @@ const RoadCanvas = () => {
   const [segments, setSegments] = useState([]);
 
   const [polygons, setPolygons] = useState([]);
+  const [roadBorders, setRoadBorders] = useState([]);
   const [selectedPoly, setSelectedPoly] = useState(null);
   const [signs, setSigns] = useState([]);
 
@@ -45,11 +48,14 @@ const RoadCanvas = () => {
     const savedPoints = localStorage.getItem("points");
     const savedSegments = localStorage.getItem("segments");
     const savedSigns = localStorage.getItem("signs");
+    const savedStage = localStorage.getItem("stage");
 
     if (savedPoints && savedSegments && savedSigns) {
       setPoints(JSON.parse(savedPoints));
       setSegments(JSON.parse(savedSegments));
       setSigns(JSON.parse(savedSigns));
+      setStageScale(JSON.parse(savedStage).stageScale);
+      setStagePosition(JSON.parse(savedStage).stagePosition);
     }
   }, []);
 
@@ -61,7 +67,7 @@ const RoadCanvas = () => {
   }, [mode])
 
   useEffect(() => {
-    console.log(polygons)
+    // console.log(polygons)
   }, [polygons])
 
   useEffect(() => {
@@ -187,7 +193,7 @@ const RoadCanvas = () => {
   }
 
   return (
-    <RoadContext.Provider value={{points, setPoints, segments, setSegments, mode, setMode, polygons, setPolygons, selectedPoly, setSelectedPoly, signs, setSigns}}>
+    <RoadContext.Provider value={{points, setPoints, segments, setSegments, mode, setMode, polygons, setPolygons, selectedPoly, setSelectedPoly, signs, setSigns, stageScale, setStageScale, stagePosition, setStagePosition, roadBorders, setRoadBorders}}>
       <Stage
         ref={stage}
         onClick={mode == Modes.Graphs ? handleClick: null}
@@ -212,7 +218,7 @@ const RoadCanvas = () => {
                 height={100}
                 fill={"red"}
                 shadowBlur={5}
-                onClick={() => {console.log("points", points); console.log("segments", segments); console.log("signs", signs);}}
+                onClick={() => {console.log("points", points); console.log("segments", segments); console.log("signs", signs); console.log("polygons", polygons);}}
               />
 
               <Graph 
@@ -243,6 +249,8 @@ const RoadCanvas = () => {
                 direction={sign.direction} 
                 flipped={sign.flipped}
             />)}
+
+            <Car />
 
           </Layer>
       </Stage>

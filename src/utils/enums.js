@@ -1,7 +1,7 @@
 export const Modes = {
 	Graphs: "Graph",
 	Markings: "Markings",
-	Cars: "winter",
+	Cars: "Cars",
 }
 
 export const Markings = {
