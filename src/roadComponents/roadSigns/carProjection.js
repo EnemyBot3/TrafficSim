@@ -1,17 +1,19 @@
-import React, { useContext } from 'react'
+import React, { useEffect, useContext } from 'react'
 import { Line, Shape, Image } from 'react-konva';
 import { translate, angle, samePoint, radsToDegs } from '../../utils/math';
-import { roadWidth, Modes } from '../../utils/enums';
+import { roadWidth, Modes, Vehicles } from '../../utils/enums';
 import { RoadContext } from '../../roadCanvas';
+import Car from '../../carComponents/car';
 import carSrc from '../../assets/images/car.png'
 import useImage from 'use-image';
 
 const carHeight = 50;
 const carWidth = 30;
 
-export const Car = ({center, direction, flipped, projection}) => {
-  const { mode, setSigns } = useContext(RoadContext);
-  const [car] = useImage(carSrc)
+export const CarProjection = ({center, direction, flipped, projection}) => {
+  const { mode, setSigns, setVehicles } = useContext(RoadContext);
+  const [car] = useImage(carSrc);
+  const rotation = flipped ? angle(direction) - Math.PI / 2 : angle(direction) + Math.PI / 2
 
   const hitbox = [
     ...Object.values(translate(center, angle(direction), carHeight/2 )),
@@ -24,16 +26,22 @@ export const Car = ({center, direction, flipped, projection}) => {
     }
   }
 
+  if (!projection) {
+    setVehicles((vehicles) => [...vehicles, {type: Vehicles.Car, origin: center, rotation}])
+    setSigns((signs) => signs.filter(sign  => !samePoint(sign.center, center)))
+    return;
+  }
+
   return (
     <>
       {car  &&  
         <Shape 
           listening={false}
-          opacity={projection ? 0.3 : 1}
+          opacity={projection ? 0.3 : 0}
           sceneFunc={(ctx, shape) => {
             ctx.save();
             ctx.translate(center.x, center.y);
-            ctx.rotate(flipped ? angle(direction) - Math.PI / 2 : angle(direction) + Math.PI / 2);
+            ctx.rotate(rotation);
             ctx.drawImage(car, -carWidth /2, -carHeight /2);
 
             ctx.restore();

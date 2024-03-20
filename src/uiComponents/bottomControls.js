@@ -9,17 +9,18 @@ export default function BottomControls() {
     const [selected, setSelected] = useState("Graph");
 
     const graphs = () => {
-        setMode(Modes.Graphs);
-        setSelected(Modes.Graphs)
+      setMode(Modes.Graphs);
+      setSelected(Modes.Graphs)
     }
     
     const markings = () => {
-        setMode(Modes.Markings);
-        setSelected(Modes.Markings)
+      setMode(Modes.Markings);
+      setSelected(Modes.Markings)
     }
     
     const cars = () => {
-
+      setMode(Modes.Cars);
+      setSelected(Modes.Cars)
     }
     
     const pause = () => {
@@ -31,7 +32,7 @@ export default function BottomControls() {
 
       <HUDBottons onClick={graphs} icon={'🌐'} title={"Graph"} selected={selected == Modes.Graphs}/>
       <HUDBottons onClick={markings} icon={'🪧'} title={"Markings"} selected={selected == Modes.Markings}/>
-      <HUDBottons onClick={pause} icon={'🚗'} title={"sdddd"}/>
+      <HUDBottons onClick={cars} icon={'🚗'} title={"Cars"} selected={selected == Modes.Cars}/>
       <HUDBottons onClick={pause} icon={'⏯️'} title={"wseeraph"}/>
       <HUDBottons onClick={pause} icon={'🗑️'} title={"Graph"}/>
     </div>

@@ -27,7 +27,8 @@ function Graph({points, segments, update}) {
 
     return ( 
         <>
-        <Polgon segments={segments} />
+        <Polgon
+            segments={segments} />
 
         {
             segments.map((item, index) => 

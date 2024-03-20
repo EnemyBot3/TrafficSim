@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { Shape } from 'react-konva';
 import { RoadContext } from "../roadCanvas";
 import { Modes, roadWidth, Markings, selectedMarking } from '../utils/enums';
-import { projectPoint, segmentDirectionVector, translate, gradient, crossProduct, samePoint } from '../utils/math';
+import { projectPoint, segmentDirectionVector, translate, gradient, crossProduct } from '../utils/math';
 import { Sign } from './roadSigns/sign';
 
 
@@ -46,7 +46,7 @@ export default function MarkingsEditor({ polygon, segment }) {
     }
 
     return (
-        mode == Modes.Markings && 
+        (mode == Modes.Markings || mode == Modes.Cars) && 
         <>
             <Shape 
                 listening={true}

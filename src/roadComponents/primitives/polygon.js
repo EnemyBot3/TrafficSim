@@ -1,12 +1,12 @@
 import { Line, Arc, Shape } from 'react-konva';
-import { gradient, translate, getIntersection, getRandomColor, average } from "../../utils/math";
+import { gradient, translate, getIntersection, getRandomColor, average, samePoint, sameArray } from "../../utils/math";
 import { memo } from 'react';
 import { RoadContext } from "../../roadCanvas";
 import { Modes, roadWidth } from "../../utils/enums";
 import { useContext, useMemo } from 'react';
 
 const Polygon = memo(function Polygon({ segments }) {
-    const { mode, selectedPoly, setPolygons, setSelectedPoly, setRoadBorders } = useContext(RoadContext);
+    const { mode, selectedPoly, setPolygons, setSelectedPoly, setRoadBorders, points } = useContext(RoadContext);
 
     var kept = [];
     const radius = roadWidth / 2;
@@ -19,13 +19,33 @@ const Polygon = memo(function Polygon({ segments }) {
         const [ start, end ] = segment;
         const vertices = []
 
+        const startJunction = segments.flat().filter(pos => samePoint(start, pos)).length;
+        const endJunction = segments.flat().filter(pos => samePoint(end, pos)).length;
+        
         const alpha = gradient(start, end);
         const alpha_cw = alpha + Math.PI / 2;
-        const alpha_ccw = alpha - Math.PI / 2;
-        const step = Math.PI / roundness
+        const alpha_ccw = alpha - Math.PI / 2;     
 
-        for (let i = alpha_ccw; i <= alpha_cw + (step / 2); i += step){ vertices.push(translate(start, i, radius)) }
-        for (let i = alpha_ccw; i <= alpha_cw + (step / 2); i += step){ vertices.push(translate(end, Math.PI + i, radius)) }
+        if (startJunction == 1) {
+            const padding = translate(start, alpha, radius);
+            vertices.push(translate(padding, alpha_ccw, radius)) 
+            vertices.push(translate(padding, alpha_cw, radius)) 
+
+        } else {
+            const steps = Math.PI / roundness;
+            for (let i = alpha_ccw; i <= alpha_cw + (steps / 2); i += steps){ vertices.push(translate(start, i, radius)) }
+        }
+
+        if (endJunction == 1) {
+            const padding = translate(end, alpha, -radius);
+            vertices.push(translate(padding, Math.PI+ alpha_ccw, radius)) 
+            vertices.push(translate(padding, Math.PI+ alpha_cw, radius)) 
+
+        } else {
+            const steps = Math.PI / roundness;
+            for (let i = alpha_ccw; i <= alpha_cw + (steps / 2); i += steps){ vertices.push(translate(end, Math.PI + i, radius)) }
+
+        }
 
         return vertices.map((vertex, i) => ({
             p1: vertex,
@@ -87,7 +107,7 @@ const Polygon = memo(function Polygon({ segments }) {
                         }
                    } 
                 }
-                if (keep) { toReturn.push(segment) }
+                if (keep) { toReturn.push({...segment, polyIndex: i}) }
             }
         }
         return toReturn;
@@ -113,7 +133,7 @@ const Polygon = memo(function Polygon({ segments }) {
                 <Shape 
                     key={index}
                     fill={color}
-                    listening={mode == Modes.Markings && selectedPoly != index}
+                    listening={(mode == Modes.Markings || mode == Modes.Cars) && selectedPoly != index}
                     onMouseEnter={() => {setSelectedPoly(index)}}
                     onMouseLeave={() => setSelectedPoly(null)}
                     stroke={color}

@@ -124,12 +124,15 @@ export function getIntersection(A, B, C, D) {
           };
        }
     }
- 
     return null;
 }
  
 export function lerp(a, b, t) {
     return a + (b - a) * t;
+}
+
+export function inverseLerp(a, b, v) {
+    return (v - a) / (b - a);
 }
  
 export function getRandomColor() {
@@ -187,6 +190,11 @@ export function round(p, amount) {
 export function radsToDegs(radians)
 {
   return radians * (180/Math.PI);
+}
+
+export function degToRad(degrees)
+{
+  return degrees * Math.PI / 180;
 }
 
 export function perpendicular(p) {

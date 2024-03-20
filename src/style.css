@@ -16,14 +16,6 @@ h1 {
     background-color: green;
 }
 
-.rightControls {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    right: 10px;
-    top: 100px;
-}
-
 .bottomControls {
     position: fixed;
     display: flex;
@@ -32,6 +24,66 @@ h1 {
     left: 50%;
     transform: translateX(-50%);
     bottom: 10px;
+}
+
+.topControls {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 130px;
+    background-color: rgba(87, 85, 63, 0.3);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 20px 30px;
+}
+
+.textInput {
+    background-color: rgba(87, 85, 63, 0.3);
+    backdrop-filter: blur(10px);
+    padding: 10px 15px;
+    border: 3px solid darkgreen;
+    border-radius: 15px;
+    color: white;
+    font-size: xx-large;
+    resize: none;
+    box-shadow: none;
+    outline: none;
+}
+
+.saveCancelDiv {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: end;
+    justify-content: end;
+}
+
+.inputButton {
+    border-radius: 15px;
+    background-color: rgba(35, 128, 31, 0.3);
+    backdrop-filter: blur(10px);
+    padding: 10px 10px;
+    width: 90px;
+    text-align: center;
+    color: white;
+    letter-spacing: 1px;
+    font-size: medium;
+    cursor: pointer;
+    font-weight: 900;
+    text-align: center;
+}
+
+.red {
+    background-color: rgba(255, 0, 13, 0.3);
+    border: 1.5px solid darkred;
+}
+
+.blue {
+    background-color: rgba(1, 13, 248, 0.3);
+    border: 1.5px solid darkblue;
 }
 
 .buttons {
@@ -75,4 +127,8 @@ h1 {
     margin-top: 10px;
     margin-left: 3px;
     font-size: large;
+}
+
+.buttonIcon, .buttonText {
+    cursor: pointer;
 }

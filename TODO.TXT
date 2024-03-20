@@ -1,9 +1,15 @@
 bug
 1. multiple points can be dragged at once
-2. once points over lap no way to to unstick them (overlap protecttion on drag?)#]
+2. once points over lap no way to to unstick them (overlap protecttion on drag?)
+
+features:
+css ui and react component for text area with num of lines prop used for save name and open street maos load
+see if u can use open street map npm or iframe for the drag in part
+ 
 
 performance:
-use memo the sensors
+test app performance on different devices
+roadCanva renders 4 times ober on load?
 
 missing
 1. cant connect road by dragging a poiint over another

@@ -1,15 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Stage, Layer, Rect, Text, Line, Shape, Arc } from 'react-konva';
+
 import { samePoint, sameArray, clamp, projectPoint } from './utils/math';
-import Konva from 'konva';
-import Graph from './roadComponents/graph';
-import MarkingsEditor from './roadComponents/markings';
-import { Sign } from './roadComponents/roadSigns/sign';
-import RightContols from './uiComponents/rightContols';
-import BottomControls from './uiComponents/bottomControls';
 import { Modes } from './utils/enums';
 
-import Car from './carComponents/car';
+import Konva from 'konva';
+import { Stage, Layer, Rect, Text, Line, Shape, Arc } from 'react-konva';
+
+import Graph from './roadComponents/graph';
+
+import MarkingsEditor from './roadComponents/markings';
+import { Sign } from './roadComponents/roadSigns/sign';
+
+import Vehicle from './carComponents/vehicle';
+
+import RightContols from './uiComponents/rightContols';
+import BottomControls from './uiComponents/bottomControls';
+
 
 export const RoadContext = React.createContext();
 
@@ -30,6 +36,7 @@ const RoadCanvas = () => {
   const [roadBorders, setRoadBorders] = useState([]);
   const [selectedPoly, setSelectedPoly] = useState(null);
   const [signs, setSigns] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
 
   // {x: 100, y: 100, selected: false},
   // {x: 200, y: 200, selected: false},
@@ -65,15 +72,6 @@ const RoadCanvas = () => {
       setPreviewLine([]);
     }
   }, [mode])
-
-  useEffect(() => {
-    // console.log(polygons)
-  }, [polygons])
-
-  useEffect(() => {
-    console.log(selectedPoly)
-
-  }, [selectedPoly])
 
   const [previewLine, setPreviewLine] = useState([]);
 
@@ -155,10 +153,7 @@ const RoadCanvas = () => {
     if (mode == Modes.Graphs) {
       if (selectedPoint.current){ setPreviewLine([selectedPoint.current.x, selectedPoint.current.y, x, y]) } 
       else if (previewLine.length !== 0) { setPreviewLine([]); }
-    } else if (mode == Modes.Markings) {
-      // const hoveredSegment = getNearestSegment({x, y}, segments, 10 * stageScale.x);
-      // console.log(hoveredSegment)
-    }
+    } 
   }
 
   const dragBounds = (position) => {
@@ -179,8 +174,8 @@ const RoadCanvas = () => {
     }
 
     const newScale = { 
-      x: clamp(0.15, event.currentTarget.attrs.scaleX + (scaleBy * direction), 1.7), 
-      y: clamp(0.15, event.currentTarget.attrs.scaleY + (scaleBy * direction), 1.7) 
+      x: clamp(0.05, event.currentTarget.attrs.scaleX + (scaleBy * direction), 1.7), 
+      y: clamp(0.05, event.currentTarget.attrs.scaleY + (scaleBy * direction), 1.7) 
     }
 
     var newPosition = { 
@@ -193,7 +188,7 @@ const RoadCanvas = () => {
   }
 
   return (
-    <RoadContext.Provider value={{points, setPoints, segments, setSegments, mode, setMode, polygons, setPolygons, selectedPoly, setSelectedPoly, signs, setSigns, stageScale, setStageScale, stagePosition, setStagePosition, roadBorders, setRoadBorders}}>
+    <RoadContext.Provider value={{points, setPoints, segments, setSegments, mode, setMode, polygons, setPolygons, selectedPoly, setSelectedPoly, signs, setSigns, vehicles, setVehicles, stageScale, setStageScale, stagePosition, setStagePosition, roadBorders, setRoadBorders}}>
       <Stage
         ref={stage}
         onClick={mode == Modes.Graphs ? handleClick: null}
@@ -218,7 +213,13 @@ const RoadCanvas = () => {
                 height={100}
                 fill={"red"}
                 shadowBlur={5}
-                onClick={() => {console.log("points", points); console.log("segments", segments); console.log("signs", signs); console.log("polygons", polygons);}}
+                onClick={() => {
+                  console.log("points", points); 
+                  console.log("segments", segments); 
+                  console.log("signs", signs); 
+                  console.log("polygons", polygons);
+                  console.log('vehicles', vehicles)
+                }}
               />
 
               <Graph 
@@ -236,9 +237,13 @@ const RoadCanvas = () => {
               />
 
            { selectedPoly !== null &&
-              <MarkingsEditor 
-                polygon={polygons[selectedPoly]} 
-                segment={segments[selectedPoly]} />
+              <>
+                {(mode == Modes.Markings || mode == Modes.Cars) &&
+                 <MarkingsEditor 
+                  polygon={polygons[selectedPoly]} 
+                  segment={segments[selectedPoly]} />
+                }
+              </>
             }
 
             {signs.map((sign, index) => 
@@ -250,7 +255,15 @@ const RoadCanvas = () => {
                 flipped={sign.flipped}
             />)}
 
-            <Car />
+            {vehicles.map((car, index) => 
+              <Vehicle 
+                key={index}
+                type={car.type} 
+                origin={car.origin} 
+                rotation={car.rotation} 
+              />)}
+
+            {/* <Car /> */}
 
           </Layer>
       </Stage>

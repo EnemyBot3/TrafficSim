@@ -13,8 +13,17 @@ export const Markings = {
 	End : "End",
 }
 export var selectedMarking = null;
+export function setSelectedMarking(newMarking) {  selectedMarking = newMarking;  }
 
-export function setSelectedMarking(newMarking) { 
-	selectedMarking = newMarking; 
+export const Vehicles = {
+	Car : "Car",
+	Bus : "Bus",
+	Bicycle : "Bicycle",
+	Lorry : "Lorry",
+	Bike : "Bike",
+	Police : "Police",
 }
+export var selectedVehicle = null;
+export function setSelectedVehicle(newVehicle) {  selectedVehicle = newVehicle;  }
+
 export const roadWidth = 100;

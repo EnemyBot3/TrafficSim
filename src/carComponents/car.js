@@ -1,17 +1,16 @@
-import React, { useState, useEffect, useContext, useRef } from 'react'
-import { Line, Shape, Image } from 'react-konva';
-import { translate, angle, samePoint, radsToDegs } from '../utils/math';
-import { roadWidth, Modes } from '../utils/enums';
-import { RoadContext } from '../roadCanvas';
-import carSrc from '../assets/images/car.png'
+import React, { useState, useEffect, useRef, memo } from 'react'
 import useImage from 'use-image';
+import { Line, Shape } from 'react-konva';
+import { samePoint } from '../utils/math';
+import carSrc from '../assets/images/car.png'
 import Sensors from './sensors';
 
 const size = { w: 30, h: 50 };
 
-const Car = () => {
-    const [position, setPosition] = useState({ x: 0, y: 0 });
-    const [car, setCar] = useState(null);
+const Car = ({origin, direction, rotation}) => {
+    const [position, setPosition] = useState(origin);
+    const [carImg] = useImage(carSrc)
+
     const acceleration = 0.5;
     const maxSpeed = 5;
     const friction = 0.1;
@@ -21,15 +20,10 @@ const Car = () => {
     const forward = useRef(false);
     const reverse = useRef(false);
     const speed= useRef(0);
-    const angle= useRef(0);
+    const angle= useRef(-rotation);
     const oldPos = useRef(position);
     const requestRef = useRef()
-
-    useEffect(() => {
-        const carImage = new window.Image();
-        carImage.src = carSrc;
-        carImage.onload = () => { setCar(carImage); };
-    }, []);
+    
 
     useEffect(() => {
         const onKeyDown = (event) => {
@@ -57,8 +51,10 @@ const Car = () => {
         };
     }, []);
 
+
     const updatePosition = () => {
-        if (forward.current) { speed.current = Math.min(speed.current + acceleration,  maxSpeed    ); console.log('here', forward)}
+
+        if (forward.current) { speed.current = Math.min(speed.current + acceleration,  maxSpeed    )}
         if (reverse.current) { speed.current = Math.max(speed.current - acceleration, -maxSpeed / 2)}
 
         if (speed.current > 0){ speed.current -= friction }
@@ -75,6 +71,7 @@ const Car = () => {
         const y = oldPos.current.y - Math.cos(angle.current) * speed.current;
 
         if (!samePoint(oldPos.current, {x, y})){
+
             setPosition((prev) => { oldPos.current = prev; return {x, y} });
         }
 
@@ -83,12 +80,13 @@ const Car = () => {
 
     return (
         <>
-        {car && <Shape
+        {carImg && <Shape
+            listening={false}
             sceneFunc={(ctx, shape) => {
                 ctx.save();
                 ctx.translate(position.x, position.y);
                 ctx.rotate(-angle.current);
-                ctx.drawImage(car, -size.w / 2, -size.h / 2);
+                ctx.drawImage(carImg, -size.w / 2, -size.h / 2);
                 ctx.restore();
                 ctx.fillStrokeShape(shape);
             }}
@@ -98,4 +96,4 @@ const Car = () => {
     );
 };
 
-export default Car;
+export default memo(Car);

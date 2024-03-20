@@ -6,10 +6,10 @@ import { Modes } from "../../utils/enums";
 function Point({x, y, selected = false, onDrag}) {
     const { mode } = useContext(RoadContext);
     const size = 10;
-    const [color, setColor] = useState("transparent");
+    const [color, setColor] = useState("darkgrey");
 
-    useEffect(() => { setColor(selected? "yellow": "transparent") }, [selected]);
-    useEffect(() => { if(mode == Modes.Markings) setColor("transparent") }, [mode]);
+    useEffect(() => { setColor(selected? "yellow": "darkgrey") }, [selected]);
+    useEffect(() => { mode == Modes.Graphs ? setColor("darkgrey") : setColor("transparent") }, [mode]);
 
     const handleDragMove = (event) => {
         onDrag({
@@ -29,8 +29,9 @@ function Point({x, y, selected = false, onDrag}) {
           listening={mode == Modes.Graphs}
           onDragMove={handleDragMove}
           onDragEnd={handleDragMove}
+          opacity={color == "darkgrey" ? 1 : 1}
           onMouseEnter={() => setColor("black")}
-          onMouseLeave={() => !selected && setColor("transparent")}/>
+          onMouseLeave={() => !selected && setColor("darkgrey")}/>
     );
 }
 
