@@ -7,7 +7,15 @@ import TopControls from './topControls';
 import { inverseLerp, degToRad } from '../utils/math';
 
 export default function RightContols() {
-  const {points, setPoints, segments, setSegments, signs, setSigns, setSelectedPoly, mode, stageScale, setStageScale, stagePosition, setStagePosition} = useContext(RoadContext);
+  const {
+    points, setPoints, 
+    segments, setSegments, 
+    signs, setSigns, 
+    vehicles, setVehicles,
+    setSelectedPoly, mode, 
+    stageScale, setStageScale, 
+    stagePosition, setStagePosition
+  } = useContext(RoadContext);
   const [selected, setSelected] = useState(null);
   const [displayTop, setDisplayTop] = useState(false); 
 
@@ -15,6 +23,7 @@ export default function RightContols() {
     setPoints([]);
     setSegments([]);
     setSigns([]);
+    setVehicles([]);
     setSelectedPoly(null);
 
     setStageScale({x: 1, y: 1});
@@ -25,12 +34,13 @@ export default function RightContols() {
     localStorage.setItem("points", JSON.stringify(points));
     localStorage.setItem("segments", JSON.stringify(segments));
     localStorage.setItem("signs", JSON.stringify(signs));
+    // localStorage.setItem("vehicles", JSON.stringify(vehicles.filter(car => !car.deleted)));
     localStorage.setItem("stage", JSON.stringify({stageScale, stagePosition}));
   }
 
   const export_ = (name) => {
     const element = document.createElement("a");
-    const world = {points, segments, signs, stage: {stageScale, stagePosition}}
+    const world = {points, segments, signs, vehicles: vehicles.filter(car => !car.deleted), stage: {stageScale, stagePosition}}
     name = name ? name : "untitled"
 
     element.setAttribute(
@@ -61,6 +71,7 @@ export default function RightContols() {
         setPoints(jsonData.points);
         setSegments(jsonData.segments);
         setSigns(jsonData.signs);
+        // setVehicles(jsonData.vehicles);
         setSelectedPoly(null);
 
         setStageScale(jsonData.stage.stageScale);
@@ -118,19 +129,20 @@ export default function RightContols() {
       for (let i = 1; i < ids.length; i++) {
         const prev = newPoints.find((p) => p.id == ids[i - 1])
         const cur = newPoints.find((p) => p.id == ids[i])
-        console.log('prev, cur', prev, cur)
-        newSegments.push([prev, cur])
+        const oneWay = way.tags.oneway || way.tags.lanes == 1 || way.tags.junction == "roundabout"
+        newSegments.push({start: prev, end: cur, oneWay})
       }
     }
-    console.log('ways', ways)
-    console.log('nodes', nodes)
-    console.log('newPoints', newPoints)
-console.log('newSegments', newSegments)
+    // console.log('ways', ways)
+    // console.log('nodes', nodes)
+    // console.log('newPoints', newPoints)
+    // console.log('newSegments', newSegments)
 
     setPoints(newPoints)
     setSegments(newSegments)
+    setSigns([])
+    setVehicles([])
     setDisplayTop(false)
-
   }
 
   return (

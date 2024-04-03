@@ -6,7 +6,7 @@ import { Modes } from "../../utils/enums";
 
 function Segment({ nodes }) {
     const { mode } = useContext(RoadContext);
-    const points = nodes.flatMap(item => [item.x, item.y]);
+    const points = [nodes.start.x, nodes.start.y, nodes.end.x, nodes.end.y];
     const lineWidth = 10;
     const [color, setColor] = useState("transparent");
 

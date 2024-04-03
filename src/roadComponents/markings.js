@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { Shape } from 'react-konva';
 import { RoadContext } from "../roadCanvas";
-import { Modes, roadWidth, Markings, selectedMarking } from '../utils/enums';
+import { Modes, roadWidth, Markings, selectedMarking, setSelectedMarking, setSelectedVehicle } from '../utils/enums';
 import { projectPoint, segmentDirectionVector, translate, gradient, crossProduct } from '../utils/math';
 import { Sign } from './roadSigns/sign';
 
@@ -11,19 +11,20 @@ export default function MarkingsEditor({ polygon, segment }) {
     const [projection, setProjection] = useState(null);
     const direction = segmentDirectionVector(segment);
     const [flipped, setFlipped] = useState(false);
+    const {start, end} = segment;
 
-    const alpha = gradient(segment[0], segment[1]);
+    const alpha = gradient(start, end);
     const alpha_cw = alpha + Math.PI / 2;
     const alpha_ccw = alpha - Math.PI / 2;
 
-    const segment_cw = [
-        translate(segment[0], alpha_cw, roadWidth / 4),
-        translate(segment[1], alpha_cw, roadWidth / 4)
-    ]
-    const segment_ccw = [
-        translate(segment[0], alpha_ccw, roadWidth / 4),
-        translate(segment[1], alpha_ccw, roadWidth / 4)
-    ]
+    const segment_cw = {
+        start: translate(start, alpha_cw, roadWidth / 4),
+        end: translate(end, alpha_cw, roadWidth / 4)
+    }
+    const segment_ccw = {
+        start: translate(start, alpha_ccw, roadWidth / 4),
+        end: translate(end, alpha_ccw, roadWidth / 4)
+    }
 
     const handleMouseMove = (event) => {
         const mousePos = event.currentTarget.getRelativePointerPosition();
@@ -33,7 +34,7 @@ export default function MarkingsEditor({ polygon, segment }) {
         const quartileCCW = projectPoint(mousePos, segment_ccw).projection;
 
         if (selectedMarking == Markings.Crossing) { setProjection(center); setFlipped(true) }
-        else if (crossProduct(mousePos, segment) > 0) { setProjection(quartileCW); setFlipped(true) }
+        else if (crossProduct(mousePos, segment) < 0) { setProjection(quartileCW); setFlipped(true) }
         else { setProjection(quartileCCW); setFlipped(false) }
     }
 
@@ -41,7 +42,16 @@ export default function MarkingsEditor({ polygon, segment }) {
 
         if (event.evt.button === 0){ 
             setSigns([...signs, {type: selectedMarking, center: projection, direction, flipped}]) 
-        } 
+            if (selectedMarking == Markings.Car) { 
+                setSelectedMarking(Markings.End) 
+                setSelectedVehicle(projection)
+            }
+            else if (selectedMarking == Markings.End) { setSelectedMarking(Markings.Car) }
+        }  
+        else if (event.evt.button == 2) {
+            setSelectedMarking(null) 
+            setSelectedVehicle(null)
+        }
 
     }
 

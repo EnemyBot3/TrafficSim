@@ -1,7 +1,7 @@
 import Point from "./primitives/point";
 import Segment from "./primitives/segment";
 import Polgon from "./primitives/polygon";
-import { sameArray } from '../utils/math';
+import { samePoint } from '../utils/math';
 
 function Graph({points, segments, update}) {
 
@@ -13,14 +13,11 @@ function Graph({points, segments, update}) {
                 }
                 return item;
             }),
-            segments.map(segment =>
-                segment.map(point => {
-                  if (point.x === oldPosition.x && point.y === oldPosition.y) {
-                    return { ...point, x: newPosition.x, y: newPosition.y };
-                  }
-                  return point;
-                })
-            )
+            segments.map(({start, end}) => {
+                if (samePoint(start, oldPosition)){ return {start: newPosition, end} }
+                if (samePoint(end, oldPosition)){ return {end: newPosition, start} }
+                return {start, end}
+            })
         );
     }
   

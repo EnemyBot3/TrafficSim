@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
+import ScaleLoader from "react-spinners/ScaleLoader";
 
-export default function HUDBottons({onClick, title, icon, selected, type}) {
+export default function HUDBottons({onClick, title, icon, selected, load}) {
 
     return (
         <button className={selected? 'selectedButton' : 'buttons'} onClick={onClick}>
-            <label className='buttonIcon'>{icon}</label>
+            {load && selected ? <ScaleLoader  color="#36d7b7" height={"25px"}/> :<> <label className='buttonIcon'>{icon}</label></>}
             <label className='buttonText'>{title}</label>
         </button>
     )

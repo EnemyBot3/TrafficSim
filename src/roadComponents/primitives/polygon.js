@@ -1,26 +1,28 @@
 import { Line, Arc, Shape } from 'react-konva';
-import { gradient, translate, getIntersection, getRandomColor, average, samePoint, sameArray } from "../../utils/math";
+import { gradient, translate, getIntersection, getRandomColor, average, samePoint, sameArray, squareDistance } from "../../utils/math";
 import { memo } from 'react';
 import { RoadContext } from "../../roadCanvas";
 import { Modes, roadWidth } from "../../utils/enums";
 import { useContext, useMemo } from 'react';
 
 const Polygon = memo(function Polygon({ segments }) {
-    const { mode, selectedPoly, setPolygons, setSelectedPoly, setRoadBorders, points } = useContext(RoadContext);
+    const { mode, selectedPoly, setPolygons, setSelectedPoly, setRoadBorders, setGeneratingBorders } = useContext(RoadContext);
 
     var kept = [];
     const radius = roadWidth / 2;
     const roundness = 10;
-    const color = "grey"
+    const color = "grey";
+    const displayBorder = segments.length < 150 || (segments.length > 100 && mode != Modes.Graphs)
+
 
     // generates the road shape around each segment
     const polygons = useMemo(() => segments.map(segment => {
 
-        const [ start, end ] = segment;
+        const { start, end } = segment;
         const vertices = []
 
-        const startJunction = segments.flat().filter(pos => samePoint(start, pos)).length;
-        const endJunction = segments.flat().filter(pos => samePoint(end, pos)).length;
+        const startJunction = segments.filter(pos => samePoint(start, pos.start) || samePoint(start, pos.end)).length;
+        const endJunction = segments.filter(pos => samePoint(end, pos.start) || samePoint(end, pos.end)).length;
         
         const alpha = gradient(start, end);
         const alpha_cw = alpha + Math.PI / 2;
@@ -54,19 +56,21 @@ const Polygon = memo(function Polygon({ segments }) {
     }), [segments]);
     
     useMemo(() => {
-        for (let i = 0; i < polygons.length - 1; i++){
-            for (let j = i + 1; j < polygons.length; j++){
-            updatePolygons(polygons[i], polygons[j])
+        if (displayBorder) {
+            for (let i = 0; i < polygons.length - 1; i++){
+                for (let j = i + 1; j < polygons.length; j++){
+                    updatePolygons(polygons[i], polygons[j])
+                }
             }
         }
-    }, [segments]);
+    }, [segments, displayBorder]);
 
-    kept = useMemo( () => joinPolygons(), [segments])
+    kept = useMemo( () => displayBorder ? joinPolygons() : [], [segments, displayBorder])
 
     useMemo(() => {
         setPolygons(polygons);
         setRoadBorders(kept);
-    }, [segments])
+    }, [segments, displayBorder])
 
     function updatePolygons(poly1, poly2) {
         for (let i = 0; i < poly1.length; i++){
@@ -105,11 +109,12 @@ const Polygon = memo(function Polygon({ segments }) {
                             keep = false;
                             break;
                         }
-                   } 
+                    } 
                 }
                 if (keep) { toReturn.push({...segment, polyIndex: i}) }
             }
         }
+        setGeneratingBorders(false);
         return toReturn;
     }
 
@@ -132,7 +137,7 @@ const Polygon = memo(function Polygon({ segments }) {
             polygons.map((pol, index) => 
                 <Shape 
                     key={index}
-                    fill={color}
+                fill={color}
                     listening={(mode == Modes.Markings || mode == Modes.Cars) && selectedPoly != index}
                     onMouseEnter={() => {setSelectedPoly(index)}}
                     onMouseLeave={() => setSelectedPoly(null)}
@@ -147,33 +152,33 @@ const Polygon = memo(function Polygon({ segments }) {
                     ctx.closePath();
                     ctx.fillStrokeShape(shape);
                 }}/>
-            )          
+            )
         }
 
         {
             // mid point line
             segments.map((segment, index) => {
-                const [ start, end ] = segment;
+                const { start, end, oneWay } = segment;
                 return <Line
-                  strokeWidth={4}
-                  stroke={"white"}
-                  key={index}
-                  points={[start.x, start.y, end.x, end.y]}
-                  dash={[10, 10]}
-                  listening={false}/>})
+                    strokeWidth={4}
+                    stroke={"white"}
+                    key={index}
+                    points={[start.x, start.y, end.x, end.y]}
+                    dash={oneWay? [20, 20] : [10, 10]}
+                    listening={false}/>})
         }
 
         {
-            // borders
+            //borders
+            displayBorder &&
             kept.map((l, index) => {
-                return (
-                    <Line
-                      key={index} 
-                      strokeWidth={5}
-                      stroke={"white"}
-                      lineCap={'round'}
-                      listening={false}
-                      points={[l.p1.x, l.p1.y, l.p2.x, l.p2.y]} />)
+                return <Line
+                    key={index} 
+                    strokeWidth={5}
+                    stroke={"white"}
+                    lineCap={'round'}
+                    listening={false}
+                    points={[l.p1.x, l.p1.y, l.p2.x, l.p2.y]} />
             })
         }
       </>

@@ -4,6 +4,11 @@ export const Modes = {
 	Cars: "Cars",
 }
 
+export const States = {
+	Play: "Play",
+	Pause: "Pause"
+}
+
 export const Markings = {
 	Stop : "Stop",
 	Crossing : "Crossing",

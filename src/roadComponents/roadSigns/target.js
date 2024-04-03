@@ -1,14 +1,27 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { Line, Shape, Circle } from 'react-konva';
 import { translate, angle, samePoint } from '../../utils/math';
-import { roadWidth, Modes } from '../../utils/enums';
+import { selectedVehicle, Modes } from '../../utils/enums';
 import { RoadContext } from '../../roadCanvas';
 
 const circleHeight = 30;
 const circleWidth = 30;
 
 export const Target = ({center, direction, flipped, projection}) => {
-  const { mode, setSigns } = useContext(RoadContext);
+  const { mode, setSigns, setVehicles, vehicles, } = useContext(RoadContext);
+
+  useEffect(() => {
+    if (!projection)  {
+      setSigns(signs => signs.map(sign => {
+        //samePoint(sign.center, selectedVehicle) && 
+        if (samePoint(sign.center, selectedVehicle)) {
+          return {...sign, target: center}
+        }
+        return sign
+      }))
+
+    }
+  }, [projection])
 
   const hitbox = [
     ...Object.values(translate(center, angle(direction), -circleHeight  /  2 )),

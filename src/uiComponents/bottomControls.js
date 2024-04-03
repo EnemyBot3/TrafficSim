@@ -1,10 +1,10 @@
 import React, { useState, useContext } from 'react'
 import HUDBottons from './primitives/HUDBottons';
 import { RoadContext } from '../roadCanvas';
-import { Modes } from '../utils/enums';
+import { Modes, States } from '../utils/enums';
 
 export default function BottomControls() {
-    const {points, setPoints, segments, setSegments, mode, setMode} = useContext(RoadContext);
+    const {setMode, setState, state, setGeneratingBorders, generatingBorders, segments} = useContext(RoadContext);
 
     const [selected, setSelected] = useState("Graph");
 
@@ -14,27 +14,36 @@ export default function BottomControls() {
     }
     
     const markings = () => {
-      setMode(Modes.Markings);
-      setSelected(Modes.Markings)
+      shouldLoad();
+      setTimeout(() => { setMode(Modes.Markings); }, 50)
+      setSelected(Modes.Markings);
     }
     
     const cars = () => {
-      setMode(Modes.Cars);
+      shouldLoad();
+      setTimeout(() => { setMode(Modes.Cars); }, 50)
       setSelected(Modes.Cars)
     }
     
-    const pause = () => {
+    const play = () => {
+      shouldLoad();
+      setTimeout(() => { setState(old => old == States.Play? States.Pause : States.Play); }, 50)
+    }
 
+    const shouldLoad = () => {
+      if (selected == Modes.Graphs && segments.length > 150) {
+        setGeneratingBorders(true)
+      }
     }
 
   return (
     <div className='bottomControls'>
 
-      <HUDBottons onClick={graphs} icon={'🌐'} title={"Graph"} selected={selected == Modes.Graphs}/>
-      <HUDBottons onClick={markings} icon={'🪧'} title={"Markings"} selected={selected == Modes.Markings}/>
-      <HUDBottons onClick={cars} icon={'🚗'} title={"Cars"} selected={selected == Modes.Cars}/>
-      <HUDBottons onClick={pause} icon={'⏯️'} title={"wseeraph"}/>
-      <HUDBottons onClick={pause} icon={'🗑️'} title={"Graph"}/>
-    </div>
+      <HUDBottons onClick={graphs}   icon={'🌐'} title={"Graph"} selected={selected == Modes.Graphs}/>
+      <HUDBottons onClick={markings} icon={'🪧'} title={"Markings"} selected={selected == Modes.Markings} load={generatingBorders}/>
+      <HUDBottons onClick={cars}     icon={'🚗'} title={"Cars"} selected={selected == Modes.Cars} load={generatingBorders}/>
+      <HUDBottons onClick={play}     icon={state == States.Play ? '⏸️'  : '▶️'} title={state == States.Play ? "Pause": 'Play'} load={generatingBorders}/>
+      <HUDBottons onClick={play}     icon={'🗑️'} title={"Graph"}/>
+    </div>    
   )
 }

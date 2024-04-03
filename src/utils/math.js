@@ -1,4 +1,6 @@
-function getNearestPoint(positon, points, threshold = Number.MAX_SAFE_INTEGER) {
+import { roadWidth } from "./enums";
+
+export function getNearestPoint(positon, points, threshold = Number.MAX_SAFE_INTEGER) {
     let minDist = Number.MAX_SAFE_INTEGER;
     let nearest = null;
     
@@ -17,6 +19,10 @@ export function distance(p1, p2) {
     return Math.hypot(p1.x - p2.x, p1.y - p2.y);
 }
 
+export function squareDistance(p1, p2) {
+    return p1.x - p2.x, p1.y + p2.y;
+}
+
 export function average(p1, p2) {
     return {x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
 }
@@ -33,6 +39,32 @@ export function average(p1, p2) {
  */
 export function samePoint(p1, p2){
     return (p1.x === p2.x && p1.y === p2.y);
+}
+
+export function sameSegment(s1, s2, reversable = false){
+    const check1 = samePoint(s1.start, s2.start) && samePoint(s1.end, s2.end);
+    const check2 = reversable ? samePoint(s1.start, s2.end) && samePoint(s1.end, s2.start) : false;
+
+    return check1 || check2;
+}
+
+export function getSegmentsWithPoint(point, segments){
+    const segs = [];
+    for (const seg of segments) {
+        if (samePoint(seg.start, point) || samePoint(seg.end, point)) {
+            segs.push(seg)
+        }
+    }
+    return segs;
+}
+
+export function pointStr(position) {
+    return position.x + "," + position.y;
+}
+
+export function strPoint(string) {
+    const [x, y] = string.split(',')
+    return {x: parseInt(x), y: parseInt(y)};
 }
 
 /**
@@ -140,13 +172,21 @@ export function getRandomColor() {
     return "hsl(" + hue + ", 100%, 60%)";
 }
 
+export function getRandomRGB() {
+    const randomBetween = (min, max) => min + Math.floor(Math.random() * (max - min + 1));
+    const r = randomBetween(100, 255);
+    const g = randomBetween(100, 255);
+    const b = randomBetween(100, 255);
+    return {r, g, b}
+}
+
 export function projectPoint(point, segment) {
-    const a = subtract(point, segment[0]);
-    const b = subtract(segment[1], segment[0]);
+    const a = subtract(point, segment.start);
+    const b = subtract(segment.end, segment.start);
 
     const normB = normalize(b);
     const offset = dot(a, normB) / magnitude(b);
-    const projection = add(segment[0], scale(normB, dot(a, normB))); 
+    const projection = add(segment.start, scale(normB, dot(a, normB))); 
 
     return {projection, offset}
 }
@@ -176,7 +216,7 @@ export function dot(p1, p2) {
 }
 
 export function segmentDirectionVector(segment) {
-    return normalize(subtract(segment[0], segment[1]));
+    return normalize(subtract(segment.start, segment.end));
 }
 
 export function angle(p) {
@@ -202,8 +242,123 @@ export function perpendicular(p) {
 }
 
 export function crossProduct(p, segment) {
-    const A = subtract(p, segment[1]);
-    const B = subtract(p, segment[0]);
+    const A = subtract(p, segment.start);
+    const B = subtract(p, segment.end);
     const cross = A.x * B.y - A.y * B.x;
     return cross;
+}
+
+export function generatePoly(path) {
+
+    const radius = roadWidth / 2;
+    const roundness = 10;
+    const segments = [];
+
+    for (let i = 1; i < path.length; i++) {
+        segments.push({start: path[i - 1], end: path[i]})
+    }
+
+
+    const polygons = segments.map(segment => {
+
+        const { start, end } = segment;
+        const vertices = []
+
+        const startJunction = segments.filter(pos => samePoint(start, pos.start) || samePoint(start, pos.end)).length;
+        const endJunction = segments.filter(pos => samePoint(end, pos.start) || samePoint(end, pos.end)).length;
+        
+        const alpha = gradient(start, end);
+        const alpha_cw = alpha + Math.PI / 2;
+        const alpha_ccw = alpha - Math.PI / 2;     
+
+        if (startJunction == 1) {
+            const padding = translate(start, alpha, radius);
+            vertices.push(translate(padding, alpha_ccw, radius)) 
+            vertices.push(translate(padding, alpha_cw, radius)) 
+
+        } else {
+            const steps = Math.PI / roundness;
+            for (let i = alpha_ccw; i <= alpha_cw + (steps / 2); i += steps){ vertices.push(translate(start, i, radius)) }
+        }
+
+        if (endJunction == 1) {
+            const padding = translate(end, alpha, -radius);
+            vertices.push(translate(padding, Math.PI+ alpha_ccw, radius)) 
+            vertices.push(translate(padding, Math.PI+ alpha_cw, radius)) 
+
+        } else {
+            const steps = Math.PI / roundness;
+            for (let i = alpha_ccw; i <= alpha_cw + (steps / 2); i += steps){ vertices.push(translate(end, Math.PI + i, radius)) }
+        }
+
+        return vertices.map((vertex, i) => ({
+            p1: vertex,
+            p2: vertices[(i + 1) % vertices.length]
+        }));
+    })
+
+    for (let i = 0; i < polygons.length - 1; i++){
+        for (let j = i + 1; j < polygons.length; j++){
+            updatePolygons(polygons[i], polygons[j])
+        }
+    }
+    
+    function updatePolygons(poly1, poly2) {
+        for (let i = 0; i < poly1.length; i++){
+            for (let j = 0; j < poly2.length; j++){
+                const inters = getIntersection(
+                    poly1[i].p1, 
+                    poly1[i].p2, 
+                    poly2[j].p1, 
+                    poly2[j].p2
+                )
+            
+                if (inters && inters.offset != 1 && inters.offset != 0){
+                    const point = {x: inters.x, y: inters.y};
+
+                    let aux = poly1[i].p2;
+                    poly1[i].p2 = point
+                    poly1.splice(i + 1, 0, {p1: point, p2: aux})
+
+                    aux = poly2[j].p2;
+                    poly2[j].p2 = point
+                    poly2.splice(j + 1, 0, {p1: point, p2: aux})
+                }
+            }
+        }
+    }
+
+    function joinPolygons(){
+        const toReturn = []; 
+        for (let i = 0; i < polygons.length; i++) {
+            for (const segment of polygons[i]) {
+                let keep = true;
+
+                for(let j = 0; j < polygons.length; j++) {
+                    if (i != j) {
+                        if ( intersect(polygons[j], segment) ) {
+                            keep = false;
+                            break;
+                        }
+                    } 
+                }
+                if (keep) { toReturn.push({...segment, polyIndex: i}) }
+            }
+        }
+        return toReturn;
+    }
+
+    function intersect(poly, seg) {
+        const outerPoint = {x: -2000, y: -2000}
+        const midpoint = average(seg.p1, seg.p2);
+        let intersectionCount = 0;
+
+        for (const lines of poly) {
+            const int = getIntersection(outerPoint, midpoint, lines.p1, lines.p2);
+            if (int){ intersectionCount++; }
+        }
+        return intersectionCount % 2 == 1;
+    }
+  
+    return joinPolygons();
 }
