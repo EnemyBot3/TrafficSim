@@ -15,6 +15,29 @@ export function getNearestPoint(positon, points, threshold = Number.MAX_SAFE_INT
     return nearest;
 }
 
+export function getNearestSegment(position, segments, threshold = Number.MAX_SAFE_INTEGER) {
+    let minDist = Number.MAX_SAFE_INTEGER;
+    let nearest = null;
+    for (const seg of segments) {
+       const dist = distanceToPoint(seg, position);
+       if (dist < minDist && dist < threshold) {
+          minDist = dist;
+          nearest = seg;
+       }
+    }
+    return nearest;
+}
+
+export function distanceToPoint(seg, point) {
+    const proj = projectPoint(point, seg);
+    if (proj.offset > 0 && proj.offset < 1) {
+       return distance(point, proj.projection);
+    }
+    const distToP1 = distance(point, seg.start);
+    const distToP2 = distance(point, seg.end);
+    return Math.min(distToP1, distToP2);
+}
+
 export function distance(p1, p2) {
     return Math.hypot(p1.x - p2.x, p1.y - p2.y);
 }
@@ -64,7 +87,7 @@ export function pointStr(position) {
 
 export function strPoint(string) {
     const [x, y] = string.split(',')
-    return {x: parseInt(x), y: parseInt(y)};
+    return {x: parseFloat(x), y: parseFloat(y)};
 }
 
 /**

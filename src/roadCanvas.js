@@ -326,6 +326,7 @@ const RoadCanvas = () => {
                 direction={sign.direction} 
                 flipped={sign.flipped}
                 target={sign.target}
+                hitbox={sign.hitbox}
             />)}
 
             <Garage vehicles={vehicles} setVehicles={setVehicles} />

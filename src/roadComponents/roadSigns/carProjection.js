@@ -35,6 +35,9 @@ export const CarProjection = ({center, direction, flipped, projection, target}) 
           rotation: -rotation, 
           color: color.current, 
           target: target,
+          direction,
+          flipped,
+          hitbox: [],
           deleted: false
       }])
 
@@ -44,7 +47,6 @@ export const CarProjection = ({center, direction, flipped, projection, target}) 
       // setSigns((signs) => signs.filter(sign  => sign.center && !samePoint(sign.center, center)))
     }
 
-    // console.log('HERTE')
   }, [state, projection, car])
 
 //   if (mode == Modes.Playing) {

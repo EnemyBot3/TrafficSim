@@ -14,24 +14,23 @@ export default function BottomControls() {
     }
     
     const markings = () => {
-      shouldLoad();
-      setTimeout(() => { setMode(Modes.Markings); }, 50)
+      setMode(Modes.Markings);
       setSelected(Modes.Markings);
     }
     
     const cars = () => {
-      shouldLoad();
-      setTimeout(() => { setMode(Modes.Cars); }, 50)
+      setMode(Modes.Cars);
       setSelected(Modes.Cars)
     }
     
     const play = () => {
       shouldLoad();
       setTimeout(() => { setState(old => old == States.Play? States.Pause : States.Play); }, 50)
+      setSelected(old => old == Modes.Play? Modes.Pause : Modes.Play);
     }
 
     const shouldLoad = () => {
-      if (selected == Modes.Graphs && segments.length > 150) {
+      if (state == States.Pause && segments.length > 150) {
         setGeneratingBorders(true)
       }
     }
@@ -39,11 +38,11 @@ export default function BottomControls() {
   return (
     <div className='bottomControls'>
 
-      <HUDBottons onClick={graphs}   icon={'🌐'} title={"Graph"} selected={selected == Modes.Graphs}/>
-      <HUDBottons onClick={markings} icon={'🪧'} title={"Markings"} selected={selected == Modes.Markings} load={generatingBorders}/>
-      <HUDBottons onClick={cars}     icon={'🚗'} title={"Cars"} selected={selected == Modes.Cars} load={generatingBorders}/>
-      <HUDBottons onClick={play}     icon={state == States.Play ? '⏸️'  : '▶️'} title={state == States.Play ? "Pause": 'Play'} load={generatingBorders}/>
-      <HUDBottons onClick={play}     icon={'🗑️'} title={"Graph"}/>
+      <HUDBottons onClick={graphs}   icon={'🌐'}                                 title={"Graph"}        selected={selected == Modes.Graphs}/>
+      <HUDBottons onClick={markings} icon={'🪧'}                                 title={"Markings"}     selected={selected == Modes.Markings}/>
+      <HUDBottons onClick={cars}     icon={'🚗'}                                 title={"Cars"}         selected={selected == Modes.Cars}/>
+      <HUDBottons onClick={play}     icon={state == States.Play ? '⏸️' : '▶️'}  title={state == States.Play ? "Pause": 'Play'} selected={selected == Modes.Play} load={generatingBorders}/>
+      <HUDBottons onClick={play}     icon={'🗑️'}                                 title={"Graph"}/>
     </div>    
   )
 }

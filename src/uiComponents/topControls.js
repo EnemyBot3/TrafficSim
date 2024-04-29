@@ -71,7 +71,7 @@ export default function TopControls({onSave, onCancel, visible, placeholder, hei
     <Animate
         id={'i'}
         play={visible}
-        start={{...topControls, top: "-560px" }}
+        start={{...topControls, top: "-600px" }}
         end={topControls}>
 
         {map && height == 10 && <div onClick={onCancel} style={{
@@ -100,7 +100,7 @@ export default function TopControls({onSave, onCancel, visible, placeholder, hei
                 </MapContainer>   
                 <div className={"saveCancelDiv"}>
                     {
-                        bounds.dist < 2000 ?
+                        bounds.dist < 1500 ?
                         <button onClick={() => fetchData()} className={"inputButton blue"}> Load </button> :
                         <label style={{ color: 'red', fontSize: 'x-large', fontWeight: '900'}}> Select an area between 0 and 100 kilometers squared</label>
                     }

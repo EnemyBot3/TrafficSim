@@ -1,16 +1,18 @@
-bug
-1. multiple points can be dragged at once
-2. once points over lap no way to to unstick them (overlap protecttion on drag?)
+last stretch 
 
-features:
-css ui and react component for text area with num of lines prop used for save name and open street maos load
-see if u can use open street map npm or iframe for the drag in part
- 
+- fix ui
+remove unused buttons
+push top controls further up //
 
-performance:
-test app performance on different devices
-roadCanva renders 4 times ober on load?
+- add car spawner //
 
-missing
-1. cant connect road by dragging a poiint over another
-2. let user set file name on export
+- if playing and adding car dont switch to target //
+
+- default maps that can be loaded
+
+- traaffic lights //
+
+- car to car detection//
+
+- show path border only in pause mode //
+car path should update on segment added not only moved

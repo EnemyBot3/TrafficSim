@@ -11,6 +11,7 @@ export default function RightContols() {
     points, setPoints, 
     segments, setSegments, 
     signs, setSigns, 
+    setMode, setRoadBorders,
     vehicles, setVehicles,
     setSelectedPoly, mode, 
     stageScale, setStageScale, 
@@ -25,8 +26,9 @@ export default function RightContols() {
     setSigns([]);
     setVehicles([]);
     setSelectedPoly(null);
+    setRoadBorders([])
 
-    setStageScale({x: 1, y: 1});
+    setStageScale({x: 0.5, y: 0.5});
     setStagePosition({x: 0, y: 0});
   }
 

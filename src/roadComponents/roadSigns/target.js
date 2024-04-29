@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from 'react'
 import { Line, Shape, Circle } from 'react-konva';
 import { translate, angle, samePoint } from '../../utils/math';
-import { selectedVehicle, Modes } from '../../utils/enums';
+import { selectedVehicle, setSelectedVehicle, Modes, selectedStart, setSelectedStart } from '../../utils/enums';
 import { RoadContext } from '../../roadCanvas';
 
 const circleHeight = 30;
@@ -10,11 +10,17 @@ const circleWidth = 30;
 export const Target = ({center, direction, flipped, projection}) => {
   const { mode, setSigns, setVehicles, vehicles, } = useContext(RoadContext);
 
+
+  // console.log('selectedVehicle, center', selectedVehicle, center)
   useEffect(() => {
     if (!projection)  {
       setSigns(signs => signs.map(sign => {
-        //samePoint(sign.center, selectedVehicle) && 
-        if (samePoint(sign.center, selectedVehicle)) {
+        if (selectedVehicle && samePoint(sign.center, selectedVehicle)) {
+          setSelectedVehicle(null)
+          return {...sign, target: center}
+        }
+        if (selectedStart && samePoint(sign.center, selectedStart)) {
+          setSelectedStart(null)
           return {...sign, target: center}
         }
         return sign

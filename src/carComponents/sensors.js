@@ -1,10 +1,11 @@
 import React, { useEffect, memo, useContext, useRef, useMemo, useState } from 'react'
 import { Line, Arc } from 'react-konva';
-import { lerp, getIntersection, projectPoint, distance } from '../utils/math';
+import { lerp, getIntersection, projectPoint, distance, samePoint } from '../utils/math';
 import { RoadContext } from '../roadCanvas';
+import { Colors, Vehicles } from '../utils/enums';
 
 const Sensors = ({position, rotation, sensorData, path}) => {
-    const { state } = useContext(RoadContext)
+    const { state, roadBorders, signs, vehicles } = useContext(RoadContext)
     const rayCount = 5;
     const rayLenght = 200;
     const raySpread = Math.PI / 4;
@@ -30,9 +31,13 @@ const Sensors = ({position, rotation, sensorData, path}) => {
 
     useMemo(() => {
         detections.current = [] 
-
+        const traffic = signs.filter(sign => sign.type == "Traffic"); 
+        const cars = vehicles.filter(vehicle => !samePoint(vehicle.position, position))
+        // const cars = vehicles
+        // console.log('vehicles', vehicles)
+        
         for (var i = 0; i < rayCount; i++) {
-            detections.current.push(getDetections(rays.current[i], path.flat()));
+            detections.current.push(getDetections(rays.current[i], path.length > 0 ? path.flat(): roadBorders.flat()));
 
             function getDetections(ray, roadBorder) {
                 let intersections = [];
@@ -45,56 +50,48 @@ const Sensors = ({position, rotation, sensorData, path}) => {
                         roadBorder[i].p1,
                         roadBorder[i].p2
                     );
-                    if(inters){ intersections.push(inters); }
+                    if(inters){ intersections.push({...inters, type: 'border'}); }
                 }
 
-                if(intersections.length == 0){ return null; }
+                for(var i = 0; i < traffic.length; i++){
+
+                    const inters = getIntersection(
+                        ray[0],
+                        ray[1],
+                        {x: traffic[i].hitbox[0], y: traffic[i].hitbox[1]},
+                        {x: traffic[i].hitbox[2], y: traffic[i].hitbox[3]}
+                    );
+                    if(inters && traffic[i].color == Colors.Red){ intersections.push({...inters, type: 'red'}); }
+                    if(inters && traffic[i].color == Colors.Yellow){ intersections.push({...inters, type: 'yellow'}); }
+
+                }
+
+                for(var i = 0; i < cars.length; i++){
+
+                    const inters = getIntersection(
+                        ray[0],
+                        ray[1],
+                        {x: cars[i].hitbox[0], y: cars[i].hitbox[1]},
+                        {x: cars[i].hitbox[2], y: cars[i].hitbox[3]}
+                    );
+                    // console.log('inters',inters, ray[0],
+                    // ray[1], traffic,
+                    // {x: traffic[i].hitbox[0], y: traffic[i].hitbox[1]},
+                    // {x: traffic[i].hitbox[2], y: traffic[i].hitbox[3]})
+                    if(inters){ intersections.push({...inters, type: 'car'}); }
+                }
+
+
+
+                if(intersections.length == 0 ){ return null; }
                 return intersections.reduce((prev, curr) => (curr.offset < prev.offset ? curr : prev));
 
             }
         }
 
         sensorData(detections.current);
-    }, [position, rotation, path, state])
+    }, [position, rotation, path, state, signs, vehicles])
 
-
-
-    // useMemo(() => {
-    //     const inRange = [];
-    //     for (var i = 0; i < segments.length; i++) {
-    //         const segment = segments[i];
-    //         var {projection, offset} = projectPoint(position, segment);
-
-    //         if (offset < 0) {projection = segment.start}
-    //         else if ( offset > 1) {projection = segment.end}
-
-    //         if (distance(position, projection) < roadWidth ){
-    //             inRange.push(i)
-    //         }
-    //     }
-
-    //     // const segmentsInRange = roadBorders.filter(r => inRange.indexOf(r.polyIndex) >= 0)
-    //     const segmentsInRange = path.filter(r => inRange.indexOf(r.polyIndex) >= 0)
-
-    //     detections.current = [] 
-
-    //     for (var i = 0; i < rayCount; i++) {
-    //         detections.current.push(getDetections(rays.current[i], segmentsInRange));
-    //         function getDetections(ray, roadBorder) {
-    //             let intersections = [];
-    //             for(var i = 0; i < roadBorder.length; i++){
-    //                 const inters = getIntersection( ray[0], ray[1], roadBorder[i].p1, roadBorder[i].p2 );
-    //                 if(inters){ intersections.push(inters); }
-    //             }
-
-    //             if(intersections.length == 0){ return null; }
-    //             return intersections.reduce((prev, curr) => (curr.offset < prev.offset ? curr : prev));
-    //         }
-    //     }
-
-    //     sensorData(detections.current);
-
-    // }, [position, rotation, path, state])
 
   return (
     <>
@@ -111,7 +108,7 @@ const Sensors = ({position, rotation, sensorData, path}) => {
                         points={points}
                         listening={false}
                         opacity={0.5}
-                        key={index}
+                        key={Math.random()}
                     />
 
                     <Arc 
@@ -122,7 +119,7 @@ const Sensors = ({position, rotation, sensorData, path}) => {
                         angle={360}
                         fill={"blue"}
                         listening={false}
-                        key={(index + 10).toString()}/>
+                        key={Math.random()}/>
                     </>
                 )
             }

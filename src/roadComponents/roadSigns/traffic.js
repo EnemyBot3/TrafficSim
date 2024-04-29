@@ -1,7 +1,7 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Line, Shape, Circle } from 'react-konva';
 import { translate, angle, samePoint, perpendicular, } from '../../utils/math';
-import { roadWidth, Modes } from '../../utils/enums';
+import { roadWidth, Modes, Colors } from '../../utils/enums';
 import { RoadContext } from '../../roadCanvas';
 
 const circleHeight = 26;
@@ -9,6 +9,23 @@ const circleWidth = 20;
 
 export const Traffic = ({center, direction, flipped, projection}) => {
   const { mode, setSigns } = useContext(RoadContext);
+  const [color, setColor] = useState(Colors.Red);
+
+
+  const nextColor = () => {
+    setColor(old => {
+      let c;
+      if (old == Colors.Red) c = Colors.Green;
+      else if (old == Colors.Green) c = Colors.Yellow;
+      else if (old == Colors.Yellow) c = Colors.Red;
+
+      setSigns( oldS => oldS.map( sign => samePoint(sign.center, center) ? {...sign, color: c} : sign ))
+      
+      return c;
+    })
+  }
+
+
 
   const points = {
     redLight: translate(center, angle(perpendicular(direction)), -circleHeight  /  2 ),
@@ -17,8 +34,8 @@ export const Traffic = ({center, direction, flipped, projection}) => {
   }
 
   const hitbox = [
-    ...Object.values(translate(center, angle(direction), -circleHeight  /  2 )),
-    ...Object.values(translate(center, angle(direction), circleHeight / 2))
+    ...Object.values(translate(center, angle(perpendicular(direction)), -circleHeight )),
+    ...Object.values(translate(center, angle(perpendicular(direction)), circleHeight ))
   ]
 
   const handleClick = (event) => {
@@ -26,6 +43,18 @@ export const Traffic = ({center, direction, flipped, projection}) => {
       setSigns((signs) => signs.filter(sign  => !samePoint(sign.center, center)))
     }
   }
+
+  useEffect(() => {
+    
+    function interval() { nextColor();}
+    setInterval(interval, 5000)
+    setSigns( oldS => oldS.map( sign => samePoint(sign.center, center) ? {...sign, hitbox, color} : sign ))
+
+    return () => {
+      clearInterval(interval)
+    };
+  }, []);
+
 
   return (
     <>
@@ -42,6 +71,7 @@ export const Traffic = ({center, direction, flipped, projection}) => {
         onClick={handleClick}/>
 
       <Circle 
+        opacity={color == Colors.Red ? 1 : 0.2}
         x={points.redLight.x}
         y={points.redLight.y}
         radius={5}
@@ -49,6 +79,7 @@ export const Traffic = ({center, direction, flipped, projection}) => {
         listening={false}/>
 
       <Circle 
+        opacity={color == Colors.Yellow ? 1 : 0.2}
         x={points.yellowLight.x}
         y={points.yellowLight.y}
         radius={5}
@@ -56,6 +87,7 @@ export const Traffic = ({center, direction, flipped, projection}) => {
         listening={false}/>
 
       <Circle 
+        opacity={color == Colors.Green ? 1 : 0.2}
         x={points.greenLight.x}
         y={points.greenLight.y}
         radius={5}
@@ -63,7 +95,7 @@ export const Traffic = ({center, direction, flipped, projection}) => {
         listening={false}/>
 
       <Line 
-        strokeWidth={circleWidth * 2.2}
+        strokeWidth={circleWidth}
         stroke={"yellow"}
         opacity={0}
         points={hitbox}

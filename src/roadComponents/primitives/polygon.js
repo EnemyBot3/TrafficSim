@@ -1,22 +1,22 @@
 import { Line, Arc, Shape } from 'react-konva';
 import { gradient, translate, getIntersection, getRandomColor, average, samePoint, sameArray, squareDistance } from "../../utils/math";
-import { memo } from 'react';
+import { memo, useRef } from 'react';
 import { RoadContext } from "../../roadCanvas";
-import { Modes, roadWidth } from "../../utils/enums";
-import { useContext, useMemo } from 'react';
+import { Modes, States, roadWidth } from "../../utils/enums";
+import { useContext, useMemo, useState } from 'react';
 
 const Polygon = memo(function Polygon({ segments }) {
-    const { mode, selectedPoly, setPolygons, setSelectedPoly, setRoadBorders, setGeneratingBorders } = useContext(RoadContext);
+    const { mode, state, selectedPoly, setPolygons, setSelectedPoly, setRoadBorders, setGeneratingBorders } = useContext(RoadContext);
 
     var kept = [];
     const radius = roadWidth / 2;
     const roundness = 10;
     const color = "grey";
-    const displayBorder = segments.length < 150 || (segments.length > 100 && mode != Modes.Graphs)
-
+    const displayBorder = segments.length < 150 || (state == States.Play);
 
     // generates the road shape around each segment
     const polygons = useMemo(() => segments.map(segment => {
+        // console.log('polygons')
 
         const { start, end } = segment;
         const vertices = []
@@ -56,6 +56,8 @@ const Polygon = memo(function Polygon({ segments }) {
     }), [segments]);
     
     useMemo(() => {
+        // console.log(segments.length, mode)
+
         if (displayBorder) {
             for (let i = 0; i < polygons.length - 1; i++){
                 for (let j = i + 1; j < polygons.length; j++){
@@ -63,16 +65,18 @@ const Polygon = memo(function Polygon({ segments }) {
                 }
             }
         }
-    }, [segments, displayBorder]);
+    }, [segments, state]);
 
     kept = useMemo( () => displayBorder ? joinPolygons() : [], [segments, displayBorder])
 
     useMemo(() => {
         setPolygons(polygons);
         setRoadBorders(kept);
-    }, [segments, displayBorder])
+    }, [segments, state])
 
     function updatePolygons(poly1, poly2) {
+        // console.log('updatePolygons')
+
         for (let i = 0; i < poly1.length; i++){
             for (let j = 0; j < poly2.length; j++){
                 const inters = getIntersection(
@@ -98,6 +102,8 @@ const Polygon = memo(function Polygon({ segments }) {
     }
 
     function joinPolygons(){
+        // console.log('joinPolygons')
+
         const toReturn = []; 
         for (let i = 0; i < polygons.length; i++) {
             for (const segment of polygons[i]) {
@@ -129,6 +135,8 @@ const Polygon = memo(function Polygon({ segments }) {
         }
         return intersectionCount % 2 == 1;
     }
+    
+    if (segments.length == 0) {return}
 
     return ( 
       <>
@@ -137,7 +145,7 @@ const Polygon = memo(function Polygon({ segments }) {
             polygons.map((pol, index) => 
                 <Shape 
                     key={index}
-                fill={color}
+                    fill={color}
                     listening={(mode == Modes.Markings || mode == Modes.Cars) && selectedPoly != index}
                     onMouseEnter={() => {setSelectedPoly(index)}}
                     onMouseLeave={() => setSelectedPoly(null)}

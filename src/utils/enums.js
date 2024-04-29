@@ -2,11 +2,19 @@ export const Modes = {
 	Graphs: "Graph",
 	Markings: "Markings",
 	Cars: "Cars",
+	Play: "Play",
+	Pause: "Pause",
 }
 
 export const States = {
 	Play: "Play",
 	Pause: "Pause"
+}
+
+export const Colors = {
+	Green: "Green",
+	Yellow: "Yellow",
+	Red: "Red",
 }
 
 export const Markings = {
@@ -30,5 +38,8 @@ export const Vehicles = {
 }
 export var selectedVehicle = null;
 export function setSelectedVehicle(newVehicle) {  selectedVehicle = newVehicle;  }
+
+export var selectedStart = null;
+export function setSelectedStart(newStart) {  selectedStart = newStart;  }
 
 export const roadWidth = 100;

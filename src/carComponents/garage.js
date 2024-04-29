@@ -7,7 +7,7 @@ export default function Garage({vehicles, setVehicles}) {
     const update = (oldPosition, newVehicles) => {
         setVehicles(oldvehicles => oldvehicles.map((car) => {
             if (!car.deleted && samePoint(car.position, oldPosition)) { 
-                return {...car, position: newVehicles.position, rotation: newVehicles.rotation} 
+                return {...car, position: newVehicles.position, rotation: newVehicles.rotation, hitbox: newVehicles.hitbox} 
             } 
             return car
         }))
@@ -23,6 +23,8 @@ export default function Garage({vehicles, setVehicles}) {
                 rotation={car.rotation} 
                 color={car.color} 
                 target={car.target}
+                direction={car.direction}
+                origin={car.origin}
                 update={update}/>)} 
     </> 
     )

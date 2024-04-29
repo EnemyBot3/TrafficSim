@@ -1,13 +1,13 @@
 import React, { useState, useContext } from 'react';
 import { Shape } from 'react-konva';
 import { RoadContext } from "../roadCanvas";
-import { Modes, roadWidth, Markings, selectedMarking, setSelectedMarking, setSelectedVehicle } from '../utils/enums';
+import { Modes, roadWidth, Markings, selectedMarking, setSelectedMarking, setSelectedVehicle, States, selectedStart, setSelectedStart } from '../utils/enums';
 import { projectPoint, segmentDirectionVector, translate, gradient, crossProduct } from '../utils/math';
 import { Sign } from './roadSigns/sign';
 
 
 export default function MarkingsEditor({ polygon, segment }) {
-    const { signs, setSigns, mode } = useContext(RoadContext);
+    const { signs, setSigns, mode, state} = useContext(RoadContext);
     const [projection, setProjection] = useState(null);
     const direction = segmentDirectionVector(segment);
     const [flipped, setFlipped] = useState(false);
@@ -40,11 +40,18 @@ export default function MarkingsEditor({ polygon, segment }) {
 
     const handleClick = (event) => { 
 
+        console.log('first')
         if (event.evt.button === 0){ 
-            setSigns([...signs, {type: selectedMarking, center: projection, direction, flipped}]) 
-            if (selectedMarking == Markings.Car) { 
+            setSigns([...signs, {type: selectedMarking, center: projection, direction, flipped, hitbox: [] }]) 
+            console.log(selectedStart, Markings.Start)
+
+            if (selectedMarking == Markings.Car && state == States.Pause) { 
                 setSelectedMarking(Markings.End) 
                 setSelectedVehicle(projection)
+            }
+            else if (selectedMarking == Markings.Start) { 
+                setSelectedMarking(Markings.End) 
+                setSelectedStart(projection)
             }
             else if (selectedMarking == Markings.End) { setSelectedMarking(Markings.Car) }
         }  
