@@ -2,7 +2,7 @@ import React, { useEffect, memo, useContext, useRef, useMemo, useState } from 'r
 import { Line, Arc } from 'react-konva';
 import { lerp, getIntersection, projectPoint, distance, samePoint } from '../utils/math';
 import { RoadContext } from '../roadCanvas';
-import { Colors, Vehicles } from '../utils/enums';
+import { Colors, Vehicles, displaySensors } from '../utils/enums';
 
 const Sensors = ({position, rotation, sensorData, path}) => {
     const { state, roadBorders, signs, vehicles } = useContext(RoadContext)
@@ -95,7 +95,7 @@ const Sensors = ({position, rotation, sensorData, path}) => {
 
   return (
     <>
-        { rays.current.map((ray, index) => {
+        {displaySensors &&  rays.current.map((ray, index) => {
             if (detections.current[index]) {
                 const points = [ray[0].x, ray[0].y, detections.current[index].x, detections.current[index].y ];
                 var c = "blue"

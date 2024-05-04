@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect, useContext, memo } from 'react'
 import useImage from 'use-image';
 import Konva from 'konva'; 
-import { Line, Shape, Layer, Image, Arc } from 'react-konva';
-import { radsToDegs, samePoint, getNearestPoint, projectPoint, pointStr, strPoint, generatePoly, getNearestSegment, translate, angle, perpendicular } from '../utils/math';
+import { Line, Shape, Layer, Image, Arc, Text } from 'react-konva';
+import { radsToDegs, samePoint, getNearestPoint, projectPoint, pointStr, strPoint, generatePoly, getNearestSegment, translate, squareDistance, distance } from '../utils/math';
 import carSrc from '../assets/images/car.png'
 import Sensors from './sensors';
 import { RoadContext } from '../roadCanvas'; 
-import { States, Modes } from '../utils/enums';
+import { States, Modes, displayTrail } from '../utils/enums';
 
 const size = { w: 30, h: 50 };
 
@@ -31,6 +31,7 @@ const Car = ({position, rotation, origin, direction, flipped, color, update, tar
     const turnRadius = useRef(0.01); //0.03
     const requestRef = useRef()
     const _state = useRef(state);
+    const oldTarget = useRef(target);
 
     React.useEffect(() => { carImg && imageRef.current.cache(); }, [carImg]);
 
@@ -87,9 +88,7 @@ const Car = ({position, rotation, origin, direction, flipped, color, update, tar
             newPath.unshift(current);
             current = predecessors[current];
         }
-
-        newPath.unshift(pointStr(projectPoint(origin, getNearestSegment(origin, segments)).projection));
-
+        newPath.unshift(pointStr(projectPoint(position, getNearestSegment(position, segments)).projection));
         setPath(newPath.map(s => strPoint(s)))
         setPolys(generatePoly(newPath.map(s => strPoint(s))))
 
@@ -207,7 +206,12 @@ const Car = ({position, rotation, origin, direction, flipped, color, update, tar
         const y = oldPos.current.y - Math.cos(rotation) * speed.current;
 
         if (!samePoint(oldPos.current, {x, y})){
-            update(oldPos.current, {position: {x, y}, rotation, hitbox: hitbox({x, y})})
+            if (target && distance({x, y}, target) < 100) {
+                target = target == origin ? oldTarget.current : origin;
+                console.log('here')
+            }
+            // console.log({x, y}, target, distance({x, y}, target))
+            update(oldPos.current, {position: {x, y}, rotation, hitbox: hitbox({x, y}), target})
             oldPos.current = {x, y}
         }
 
@@ -220,7 +224,6 @@ const Car = ({position, rotation, origin, direction, flipped, color, update, tar
         }
     }
 
-    // console.log('color', color, "rgb (" +color.r+ ", " + color.g+ ", " + color.b + ")")
     return (
         <>
         { carImg && <Image
@@ -251,7 +254,7 @@ const Car = ({position, rotation, origin, direction, flipped, color, update, tar
 
         {
             //borders
-            polys.length > 0 && state == States.Pause &&
+            polys.length > 0 && displayTrail &&
             polys.map((l, index) => {
                 return <Line
                     key={index} 
@@ -263,12 +266,12 @@ const Car = ({position, rotation, origin, direction, flipped, color, update, tar
             })
         }
 
-        <Line 
+        {/* <Line 
             // strokeWidth={size.w}
             stroke={"yellow"}
             opacity={1}
             points={hitbox()}
-            listening={false}/>
+            listening={false}/> */}
 
         <Sensors position={position} rotation={rotation} sensorData={sensorData} path={polys}/>
         </>

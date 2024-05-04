@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { RoadContext } from '../roadCanvas';
 import HUDBottons from './primitives/HUDBottons';
 import { Animate } from "react-simple-animate";
-import { Modes, Markings, selectedMarking, setSelectedMarking } from '../utils/enums';
+import { Modes, Markings, selectedMarking, setSelectedMarking, Blueprints, selectedBlueprint, setSelectedBlueprint, States, displaySensors, displayTrail, toggleSensors, toggleTrail } from '../utils/enums';
 import TopControls from './topControls';
 import { inverseLerp, degToRad } from '../utils/math';
 
@@ -14,6 +14,7 @@ export default function RightContols() {
     setMode, setRoadBorders,
     vehicles, setVehicles,
     setSelectedPoly, mode, 
+    state, setState,
     stageScale, setStageScale, 
     stagePosition, setStagePosition
   } = useContext(RoadContext);
@@ -93,6 +94,16 @@ export default function RightContols() {
     }
   }
 
+  const setBlueprint = (print) => {
+    if (selectedBlueprint === print) {
+      setSelectedBlueprint(null);
+      setSelected(null);
+    } else {
+      setSelected(print);
+      setSelectedBlueprint(print);
+    }
+  }
+
   const load = (map) => {
     if (map == "") return;
 
@@ -147,6 +158,62 @@ export default function RightContols() {
     setDisplayTop(false)
   }
 
+  const blueprint = (map) => {
+    if (map == "") return;
+
+    const data = JSON.parse(map);
+    const nodes = data.elements.filter((n) => n.type == "node");
+    const ways = data.elements.filter((n) =>  n.type == "way");
+    
+    const newPoints = [];
+    const newSegments = [];
+
+    const latitudes = nodes.map(n => n.lat)
+    const longitudes = nodes.map(n => n.lon)
+
+    const minLat = Math.min(...latitudes)
+    const maxLat = Math.max(...latitudes)
+    const minLon = Math.min(...longitudes)
+    const maxLon = Math.max(...longitudes)
+
+    const deltaLat = maxLat - minLat;
+    const deltaLon = maxLon - minLon;
+    const aspectRatio = deltaLon / deltaLat;
+    const height = deltaLat * 111000 * 10;
+    const width = height * aspectRatio * Math.cos(degToRad(maxLat));
+
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    for (const node of nodes) {
+      const y = (inverseLerp(maxLat, minLat, node.lat) * height) - centerY;
+      const x = (inverseLerp(minLon, maxLon, node.lon) * width) - centerX;
+      newPoints.push({x, y, id: node.id})
+    }
+
+    for (const way of ways) {
+      const ids = way.nodes;
+      for (let i = 1; i < ids.length; i++) {
+        const prev = newPoints.find((p) => p.id == ids[i - 1])
+        const cur = newPoints.find((p) => p.id == ids[i])
+        const oneWay = way.tags.oneway || way.tags.lanes == 1 || way.tags.junction == "roundabout"
+        newSegments.push({start: prev, end: cur, oneWay})
+      }
+    }
+    // console.log('ways', ways)
+    // console.log('nodes', nodes)
+    // console.log('newPoints', newPoints)
+    // console.log('newSegments', newSegments)
+
+    setPoints(newPoints)
+    setSegments(newSegments)
+    setSigns([])
+    setVehicles([])
+    setDisplayTop(false)
+  }
+
+  console.log('mode', mode)
+
   return (
     <>
       <Animate
@@ -170,8 +237,28 @@ export default function RightContols() {
           <HUDBottons onClick={() => setMarking(Markings.Stop)}     title={'Stop'}     icon={'🛑'} selected={ selected == Markings.Stop } />
           <HUDBottons onClick={() => setMarking(Markings.Crossing)} title={'Crossing'} icon={'🚶'} selected={ selected == Markings.Crossing } />
           <HUDBottons onClick={() => setMarking(Markings.Traffic)}  title={'Traffic'}  icon={'🚥'} selected={ selected == Markings.Traffic } />
+          <HUDBottons onClick={() => setMarking(Markings.Car)}      title={'Car'}     icon={'🚗'} selected={ selected == Markings.Car } />
           <HUDBottons onClick={() => setMarking(Markings.Start)}    title={'Start'}    icon={'🛣️'} selected={ selected == Markings.Start } />
-          <HUDBottons onClick={() => setMarking(Markings.End)}      title={'End'}      icon={'⛳'} selected={ selected == Markings.End } />
+      </Animate>
+
+      <Animate
+        play={mode != Modes.Blueprint}
+        start={rightControls}
+        end={{ ...rightControls, right: "-100px" }}>
+
+          <HUDBottons onClick={() => setBlueprint(Blueprints.Roundabout)}    title={'Roundabout'}     icon={'⭕'} selected={ selected == Blueprints.Roundabout } />
+          <HUDBottons onClick={() => setBlueprint(Blueprints.Intersection)}  title={'Intersection'}   icon={'➕'} selected={ selected == Blueprints.Intersection } />
+          <HUDBottons onClick={() => setBlueprint(Blueprints.Clover)}        title={'Cloverleaf'}     icon={'🍀'} selected={ selected == Blueprints.Clover } />
+          <HUDBottons onClick={() => setBlueprint(Blueprints.Diamond)}       title={'Diamond'}        icon={'🔷'} selected={ selected == Blueprints.Diamond } />
+      </Animate>
+
+      <Animate
+        play={state != States.Play}
+        start={leftControls}
+        end={{ ...leftControls, left: "-100px" }}>
+
+          <HUDBottons onClick={toggleTrail}    title={'Trail'}     icon={'🛤️'} selected={ displayTrail } />
+          <HUDBottons onClick={toggleSensors}  title={'Sensors'}   icon={'🚨'} selected={ displaySensors } />
       </Animate>
 
       <Animate
@@ -203,5 +290,14 @@ const rightControls = {
   flexDirection: "column",
   gap: "10px",
   right: "10px",
+  top: "100px"
+}
+
+const leftControls = {
+  position: "fixed",
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+  left: "10px",
   top: "100px"
 }

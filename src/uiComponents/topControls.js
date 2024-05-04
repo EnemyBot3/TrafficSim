@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Animate } from "react-simple-animate";
 
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, useMap, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import L from "leaflet";
+import L, { marker } from "leaflet";
 import 'leaflet-area-select';
 import "leaflet-draw";
 import "leaflet-draw/dist/leaflet.draw.css";
+import { GeoSearchControl, EsriProvider, OpenStreetMapProvider} from 'leaflet-geosearch';
 
 import axios from 'axios';
 
@@ -97,12 +98,14 @@ export default function TopControls({onSave, onCancel, visible, placeholder, hei
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                         <AreaSelect setBounds={setBounds}/>
+                        <Search provider={new EsriProvider()} />
+
                 </MapContainer>   
                 <div className={"saveCancelDiv"}>
                     {
                         bounds.dist < 1500 ?
                         <button onClick={() => fetchData()} className={"inputButton blue"}> Load </button> :
-                        <label style={{ color: 'red', fontSize: 'x-large', fontWeight: '900'}}> Select an area between 0 and 100 kilometers squared</label>
+                        <label style={{ color: 'red', fontSize: 'x-large', fontWeight: '900'}}> Select an area below 100Km²</label>
                     }
                 </div>                  
             </div>
@@ -116,8 +119,8 @@ export default function TopControls({onSave, onCancel, visible, placeholder, hei
                     onChange={(e) => setInput(e.target.value)}
                     className={"textInput"} />         
                 <div className={"saveCancelDiv"}>
-                    <button onClick={() => {setMap(true); onCancel()}} className={"inputButton red"}> Cancel </button>
-                    <button onClick={() => {setMap(true); onSave(input)}} className={"inputButton blue"}> Save </button>
+                    <button onClick={() => {setMap(true); setInput(""); onCancel()}} className={"inputButton red"}> Cancel </button>
+                    <button onClick={() => {setMap(true); onSave(input); setInput("");}} className={"inputButton blue"}> Save </button>
                 </div>          
             </div>
         }
@@ -180,6 +183,25 @@ function AreaSelect({setBounds}) {
   
     return null;
   }
+
+  const Search = (props) => {
+    const map = useMap()
+    const { provider } = props
+
+    useEffect(() => {
+        const searchControl = new GeoSearchControl({
+            provider: new OpenStreetMapProvider(),
+            showMarker: false
+        })
+
+        map.addControl(searchControl)
+        return () => map.removeControl(searchControl)
+    }, [props])
+
+    return null
+}
+
+
 
 const topControls = {
     position: "fixed",

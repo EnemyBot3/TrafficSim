@@ -16,3 +16,8 @@ push top controls further up //
 
 - show path border only in pause mode //
 car path should update on segment added not only moved
+
+
+- when reach target recalc path
+
+- blueprints withs signs and cars

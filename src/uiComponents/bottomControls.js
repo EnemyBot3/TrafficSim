@@ -17,6 +17,11 @@ export default function BottomControls() {
       setMode(Modes.Markings);
       setSelected(Modes.Markings);
     }
+
+    const blueprints = () => {
+      setMode(Modes.Blueprint);
+      setSelected(Modes.Blueprint);
+    }
     
     const cars = () => {
       setMode(Modes.Cars);
@@ -38,11 +43,10 @@ export default function BottomControls() {
   return (
     <div className='bottomControls'>
 
-      <HUDBottons onClick={graphs}   icon={'🌐'}                                 title={"Graph"}        selected={selected == Modes.Graphs}/>
-      <HUDBottons onClick={markings} icon={'🪧'}                                 title={"Markings"}     selected={selected == Modes.Markings}/>
-      <HUDBottons onClick={cars}     icon={'🚗'}                                 title={"Cars"}         selected={selected == Modes.Cars}/>
-      <HUDBottons onClick={play}     icon={state == States.Play ? '⏸️' : '▶️'}  title={state == States.Play ? "Pause": 'Play'} selected={selected == Modes.Play} load={generatingBorders}/>
-      <HUDBottons onClick={play}     icon={'🗑️'}                                 title={"Graph"}/>
+      <HUDBottons onClick={graphs}     icon={'🌐'}                                 title={"Graph"}        selected={selected == Modes.Graphs}/>
+      <HUDBottons onClick={markings}   icon={'🚗'}                                 title={"Markings"}     selected={selected == Modes.Markings}/>
+      <HUDBottons onClick={blueprints} icon={'🛠️'}                                 title={"Blueprints"}   selected={selected == Modes.Blueprint}/>
+      <HUDBottons onClick={play}       icon={state == States.Play ? '⏸️' : '▶️'}  title={state == States.Play ? "Pause": 'Play'} selected={selected == Modes.Play} load={generatingBorders}/>
     </div>    
   )
 }

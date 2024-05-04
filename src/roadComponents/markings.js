@@ -40,10 +40,8 @@ export default function MarkingsEditor({ polygon, segment }) {
 
     const handleClick = (event) => { 
 
-        console.log('first')
         if (event.evt.button === 0){ 
             setSigns([...signs, {type: selectedMarking, center: projection, direction, flipped, hitbox: [] }]) 
-            console.log(selectedStart, Markings.Start)
 
             if (selectedMarking == Markings.Car && state == States.Pause) { 
                 setSelectedMarking(Markings.End) 

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 import { samePoint, sameArray, clamp, sameSegment, pointStr, distance, getIntersection } from './utils/math';
-import { Modes, States } from './utils/enums';
+import { Blueprints, Markings, Modes, States, Vehicles, selectedBlueprint } from './utils/enums';
 
 import Konva from 'konva';
 import { Stage, Layer, Rect, Text, Line, Shape, Arc } from 'react-konva';
@@ -16,6 +16,10 @@ import Garage from './carComponents/garage';
 import RightContols from './uiComponents/rightContols';
 import BottomControls from './uiComponents/bottomControls';
 
+import roundabout from './assets/blueprints/roundabout.world';
+import intersection from './assets/blueprints/intersection.world';
+import cloverleaf from './assets/blueprints/cloverleaf.world'
+import diamond from './assets/blueprints/diamond.world'
 
 export const RoadContext = React.createContext();
 
@@ -123,7 +127,7 @@ const RoadCanvas = () => {
       document.removeEventListener('keydown', onKeyDown);
       document.removeEventListener('keyup', onKeyUp);
     };
-  }, []);
+  }, [polygons]);
 
   useEffect(() => {
     if (mode == Modes.Markings) {
@@ -245,6 +249,74 @@ const RoadCanvas = () => {
     setStagePosition(newPosition);
   }
 
+
+  const handlePaste = (event) => {
+    if (event.evt.button !== 0) return; 
+    const mousePos = event.target.getRelativePointerPosition();
+  
+    const processBlueprint = (blueprintUrl) => {
+      fetch(blueprintUrl)
+        .then(response => response.text())
+        .then(text => {
+          let data = JSON.parse(text);
+          const centroid = data.points.reduce((acc, point) => {
+            acc.x += point.x / data.points.length;
+            acc.y += point.y / data.points.length;
+            return acc;
+          }, {x: 0, y: 0});
+  
+          const xOffset = mousePos.x - centroid.x;
+          const yOffset = mousePos.y - centroid.y;
+          const pointsMapping = new Map();
+
+          const centeredPoints = data.points.map(point => {
+            const newX = point.x + xOffset;
+            const newY = point.y + yOffset;
+            pointsMapping.set(`${point.x},${point.y}`, {x: newX, y: newY});
+            return {...point, x: newX, y: newY};
+          });
+
+          const centeredSigns = data.signs.map(sign => {
+            const newX = sign.center.x + xOffset;
+            const newY = sign.center.y + yOffset;
+            if (sign.type == Markings.Car || sign.type == Markings.Start) {
+              const newTargetX = sign.target.x + xOffset;
+              const newTargetY = sign.target.y + yOffset;
+              return {...sign, center: {x: newX, y: newY}, target: {x: newTargetX, y: newTargetY}};
+            }
+            return {...sign, center: {x: newX, y: newY}};
+          }); 
+
+          const updatedSegments = data.segments.map(segment => ({
+            ...segment,
+            start: pointsMapping.get(`${segment.start.x},${segment.start.y}`) || segment.start,
+            end: pointsMapping.get(`${segment.end.x},${segment.end.y}`) || segment.end
+          }));  
+  
+          setPoints(p => [...p, ...centeredPoints]);
+          setSegments(s => [...s, ...updatedSegments]);
+          setSigns(s => [...s, ...centeredSigns]);
+          setSelectedPoly(null);
+        })
+        .catch(error => {
+          console.error('Error loading blueprint:', error);
+        });
+    };
+  
+
+    if (selectedBlueprint === Blueprints.Roundabout) {
+      processBlueprint(roundabout);
+    } else if (selectedBlueprint === Blueprints.Intersection) {
+      processBlueprint(intersection);
+    } else if (selectedBlueprint === Blueprints.Clover) {
+      processBlueprint(cloverleaf);
+    } else if (selectedBlueprint === Blueprints.Diamond) {
+      processBlueprint(diamond);
+    }
+  };
+  
+  
+
   return (
     <RoadContext.Provider value={{
       points, setPoints, 
@@ -263,7 +335,7 @@ const RoadCanvas = () => {
     }}>
       <Stage
         ref={stage}
-        onClick={mode == Modes.Graphs ? handleClick: null}
+        onClick={mode == Modes.Graphs ? handleClick: mode == Modes.Blueprint ? handlePaste : null}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onWheel={handleMouseWheel}
@@ -275,9 +347,8 @@ const RoadCanvas = () => {
         className='canvas'>
 
           <Layer>
-            <Text text="Try click on rect" />
 
-              <Rect 
+              {/* <Rect 
                 x={0}
                 y={0}
                 width={100}
@@ -292,7 +363,7 @@ const RoadCanvas = () => {
                   console.log("polygons", polygons);
                   console.log('vehicles', vehicles)
                 }}
-              />
+              /> */}
 
               <Graph 
                 points={points}

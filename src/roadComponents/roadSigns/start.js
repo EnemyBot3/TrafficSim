@@ -10,6 +10,7 @@ const circleWidth = 30;
 export const Start = ({center, direction, flipped, projection, target}) => {
   const { mode, state, setSigns, setVehicles, vehicles, } = useContext(RoadContext);
   const rotation = flipped ? angle(direction) - Math.PI / 2 : angle(direction) + Math.PI / 2
+  const carCount = useRef(0);
 
   const intervalRef = useRef(null);
 //   useEffect(() => {
@@ -26,7 +27,8 @@ export const Start = ({center, direction, flipped, projection, target}) => {
 //   }, [projection])
 
 const spawnCar = () => {
-    if (state == States.Play && !projection)  {
+    if (state == States.Play && !projection && carCount.current < 15)  {
+        carCount.current += 1;
         setVehicles((vehicles) =>  [
           ...vehicles, {
             type: Vehicles.Car, 
@@ -43,7 +45,7 @@ const spawnCar = () => {
 
    
         // setSigns((signs) => signs.filter(sign  => sign.center && !samePoint(sign.center, center)))
-      }
+    }
 }
 
 
