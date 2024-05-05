@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.css": "/TrafficSim/static/css/main.c603b1de.css",
+    "main.js": "/TrafficSim/static/js/main.ff2d7605.js",
+    "static/media/cloverleaf.world": "/TrafficSim/static/media/cloverleaf.55a4c5861be3e513a06a.world",
+    "static/media/diamond.world": "/TrafficSim/static/media/diamond.0dc6fd313f7fa89cf652.world",
+    "static/media/roundabout.world": "/TrafficSim/static/media/roundabout.b50883ef58e5514431ac.world",
+    "static/media/spritesheet.svg": "/TrafficSim/static/media/spritesheet.a4e0eb7ad904a4858361.svg",
+    "static/media/intersection.world": "/TrafficSim/static/media/intersection.eb3fc77eb9f752e58ae6.world",
+    "index.html": "/TrafficSim/index.html",
+    "main.c603b1de.css.map": "/TrafficSim/static/css/main.c603b1de.css.map",
+    "main.ff2d7605.js.map": "/TrafficSim/static/js/main.ff2d7605.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c603b1de.css",
+    "static/js/main.ff2d7605.js"
+  ]
+}
